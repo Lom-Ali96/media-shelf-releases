@@ -14,7 +14,7 @@
 | 5 Market | poe.ninja, conversion, history, trade links | 🟡 | ✅ adapter, cache, overrides; ✅ live verification (2026-11-26); ⬜ divine conversion in UI; ⬜ trade links; ⬜ freshness badges |
 | 6 Community recipes | Manual import, extraction, validation, library | ⬜ | Recipe JSON schema; manual import of a Reddit or text guide yields steps or *explicitly listed missing info*; validation classifies into the 7 statuses |
 | 7 Pathfinding | MDP over abstract states, strategy templates | ⬜ | For 5 reference targets, it finds a strategy within 10% of the best known community method's expected cost, and labels it optimal or best-found |
-| 8 Item advisor | Live assistant, continuation advice, recovery | ⬜ | Paste → next-best action with EV; re-paste updates the plan; sunk cost ignored |
+| 8 Item advisor | Live assistant, continuation advice, recovery | 🟡 | Paste → next-best action with EV; re-paste updates the plan; sunk cost ignored |
 | 9 Profit scanner | Candidate generation, EV/ROI, risk, budgets | ⬜ | Every opportunity shows conservative/expected sale price, loss probability, confidence and data age |
 | 10 Capital | Inventory, advisor, shopping lists, P&L | ⬜ | Risk profile caps exposure; shopping list nets out owned items at opportunity cost |
 | 11 Continuous | Scheduler, invalidation, alerts, patch impact report | ⬜ | New `version.txt` → import → regression tests → impact report → affected recipes flagged |
@@ -47,6 +47,12 @@
 8. **P1:** React + TypeScript frontend shell with charts (cost distribution histogram).
 9. **P2:** Manual recipe import and validation (Phase 6 MVP).
 10. **P2:** MDP pathfinder prototype on the abstract state space.
+
+### Requested by the user (2026-11-26)
+
+- ✅ **Route planner, stage A:** paste an item or choose wanted mods with a worst acceptable tier → standard methods ranked by expected cost, with steps (`engine/planner.py`). Next: more templates (fossils once verified, essence + exalt combos, multimod finishes), then the real pathfinder (P2 above).
+- ⬜ **ROI:** sale price of the finished item entered manually, helped by a generated trade-site search link the user opens in their own browser (no automated trade-site access). ROI = sale price − expected route cost.
+- ⬜ **Import gear from Path of Building codes** (covers poe.ninja character pages, which offer a PoB export). Screenshots are not planned: they don't show tiers and text recognition misreads numbers.
 
 ## Complexity estimate
 

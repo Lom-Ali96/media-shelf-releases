@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from ..engine.actions import ACTIONS, InvalidAction
 from ..engine.item import ItemState, ItemView, UnsupportedMechanic, tier_index
 from ..engine.modpool import eligible_pool
+from ..engine.planner import Want, plan_routes
 from ..engine.simulate import ModRequirement, Target, exact_next_mod_probability, simulate_repeat_until
 from ..knowledge import importer
 from ..knowledge.coverage import coverage_report
@@ -44,6 +45,18 @@ class SimIn(BaseModel):
     target: list[Requirement]
     runs: int = Field(500, ge=1, le=20000)
     max_attempts: int = Field(1000, ge=1, le=20000)
+    seed: int = 1
+
+class WantIn(BaseModel):
+    mod_type: str
+    max_tier: int = 99
+    bench: bool = False
+
+class PlanIn(BaseModel):
+    base: str
+    item_level: int = Field(84, ge=1, le=100)
+    influences: list[str] = Field(default_factory=list)
+    wants: list[WantIn]
     seed: int = 1
 
 class FetchIn(BaseModel):
@@ -201,6 +214,45 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
                 pass
         out["rules_verified_for_current_data"] = versions.status(st.conn, g.version)["rules_verified_for_current_data"]
         return out
+
+    @app.post("/api/plan")
+    def plan(body: PlanIn):
+        g = gd()
+        b = g.bases_by_name.get(body.base) or g.bases.get(body.base)
+        if b is None:
+            raise HTTPException(404, f"unknown base {body.base!r}")
+        try:
+            routes = plan_routes(g, b.id, body.item_level, [Want(w.mod_type, w.max_tier, w.bench) for w in body.wants],
+                                 influences=frozenset(i.lower() for i in body.influences), seed=body.seed)
+        except (InvalidAction, UnsupportedMechanic) as e:
+            raise HTTPException(422, str(e))
+        lg = league()
+        prices: dict[str, dict | None] = {}
+
+        def chaos_of(units: dict[str, float] | None) -> float | None:
+            if not units:
+                return None
+            for name in units:
+                if name not in prices:
+                    prices[name] = poeninja.price_of(st.conn, lg, name) if lg else None
+            if any(prices[n] is None for n in units):
+                return None
+            return sum(v * prices[n]["chaos_value"] for n, v in units.items())
+
+        out = []
+        for r in routes:
+            d = asdict(r)
+            d["expected_chaos"] = chaos_of(r.expected_units)
+            d["range_chaos"] = [chaos_of(u) for u in r.units_range] if r.units_range else None
+            d["at_least_chaos"] = chaos_of(r.at_least_units)
+            d["missing_prices"] = sorted(n for n in (r.expected_units or r.at_least_units or {}) if prices.get(n) is None)
+            out.append(d)
+        out.sort(key=lambda d: (d["expected_chaos"] is None, d["expected_chaos"] or d["at_least_chaos"] or float("inf")))
+        divine = poeninja.price_of(st.conn, lg, "Divine Orb") if lg else None
+        base_price = poeninja.price_of(st.conn, lg, b.name) if lg else None
+        return {"base": b.name, "routes": out, "divine_chaos": divine["chaos_value"] if divine else None,
+                "base_price": base_price, "league": lg or None,
+                "rules_verified_for_current_data": versions.status(st.conn, g.version)["rules_verified_for_current_data"]}
 
     @app.get("/api/actions")
     def actions():

@@ -21,7 +21,8 @@ backend/poeci/
 │   ├── item.py                ItemState (immutable), ItemView, tiers, spawn-weight rule, metamods
 │   ├── modpool.py             eligible pool + exact probabilities (cached hot path)
 │   ├── actions.py             each currency = pure function (gd, item, rng) -> item
-│   └── simulate.py            targets, exact one-step probability, Monte Carlo, Wilson CIs
+│   ├── simulate.py            targets, exact one-step probability, Monte Carlo, Wilson CIs
+│   └── planner.py             route planner: standard methods ranked by expected cost
 ├── parsing/     clipboard.py  Ctrl+C / Ctrl+Alt+C item parser
 ├── market/      poeninja.py   Market Engine (adapter, cache, overrides, price lookup)
 ├── updates/     versions.py   Update Engine (patch gate, version checks)
