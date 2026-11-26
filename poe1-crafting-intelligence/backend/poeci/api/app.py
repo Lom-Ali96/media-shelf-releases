@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from ..engine.actions import ACTIONS, InvalidAction
 from ..engine.item import ItemState, ItemView, UnsupportedMechanic, tier_index
 from ..engine.modpool import eligible_pool
-from ..engine.planner import Want, plan_routes
+from ..engine.planner import BenchCraft, Want, plan_routes, worst_accepted_mods
 from ..engine.simulate import ModRequirement, Target, exact_next_mod_probability, simulate_repeat_until
 from ..knowledge import importer
 from ..knowledge.coverage import coverage_report
@@ -311,10 +311,16 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
                 trade_url = trade.search_url(lg, b.name, filters, min_edps)
             except Exception as e:  # noqa: BLE001 - the plan is still useful without a link
                 trade_notes = [f"No trade link: {e}"]
+        worst = worst_accepted_mods(g, ItemState(b.id, body.item_level, influences=infl), wants)
+        wants_text = [{"mod_type": w.mod_type, "max_tier": w.max_tier, "bench": w.bench,
+                       "text": BenchCraft(g, b.item_class, w).text if w.bench
+                       else worst[w.mod_type].text if w.mod_type in worst else w.mod_type} for w in wants]
         key = _plan_key(body)
         saved = st.conn.execute("SELECT sale_chaos FROM saved_plans WHERE league=? AND key=?", (lg, key)).fetchone()
         return {"base": b.name, "routes": out, "divine_chaos": divine["chaos_value"] if divine else None,
-                "base_price": base_price, "league": lg or None, "key": key,
+                "base_price": base_price, "league": lg or None, "key": key, "item_level": body.item_level,
+                "influences": sorted(infl), "wants_text": wants_text, "game_version": g.version,
+                "prices_as_of": versions.status(st.conn, g.version).get("latest_market_update"),
                 "trade_url": trade_url, "trade_notes": trade_notes, "saved_sale_chaos": saved["sale_chaos"] if saved else None,
                 "rules_verified_for_current_data": versions.status(st.conn, g.version)["rules_verified_for_current_data"]}
 

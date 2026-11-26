@@ -24,9 +24,9 @@ import time
 from collections import Counter
 from dataclasses import dataclass, field
 
-from ..knowledge.gamedata import GameData
+from ..knowledge.gamedata import GameData, Mod
 from .actions import ACTIONS, InvalidAction, apply, assumption
-from .item import ItemState, ItemView, UnsupportedMechanic
+from .item import ItemState, ItemView, UnsupportedMechanic, _tier_family
 from .modpool import eligible_pool
 from .simulate import ModRequirement, Target, wilson_interval
 
@@ -52,7 +52,7 @@ class Route:
     notes: list[str] = field(default_factory=list)
 
 
-class _Bench:
+class BenchCraft:
     def __init__(self, gd: GameData, base_item_class: str, want: Want):
         options = [
             o for o in gd.bench_options
@@ -68,7 +68,7 @@ class _Bench:
         self.text = gd.mods[self.mod_id].text
 
 
-def _ready(gd: GameData, item: ItemState, rolled: Target, bench: _Bench | None) -> bool:
+def _ready(gd: GameData, item: ItemState, rolled: Target, bench: BenchCraft | None) -> bool:
     if not rolled.met_by(gd, item):
         return False
     return bench is None or ItemView(gd, item).open_slots(bench.gen_type) > 0
@@ -123,6 +123,22 @@ def _route(name, steps, action_ids, tries, successes, used, same_cost, fixed, no
                  [{"name": a, **assumption(a)} for a in names], notes)
 
 
+def worst_accepted_mods(gd: GameData, item: ItemState, wants: list[Want]) -> dict[str, Mod]:
+    """For each wanted mod type that can roll on this base: the mod of the worst
+    accepted tier (its text shows the lowest values the user accepts)."""
+    view = ItemView(gd, item)
+    tags = frozenset(view.tags())
+    by_type: dict[str, Mod] = {}
+    for e in eligible_pool(gd, item.with_(rarity="rare", explicits=())):
+        by_type.setdefault(e.mod.type, e.mod)
+    out = {}
+    for w in wants:
+        if (mod := by_type.get(w.mod_type)) is not None:
+            family = [gd.mods[i] for i in _tier_family(gd, view.base, mod, tags)]
+            out[w.mod_type] = family[min(w.max_tier, len(family)) - 1] if family else mod
+    return out
+
+
 def plan_routes(gd: GameData, base_id: str, item_level: int, wants: list[Want], *,
                 influences: frozenset[str] = frozenset(), seed: int = 1,
                 budget_s: float = 2.0, max_successes: int = 400) -> list[Route]:
@@ -133,7 +149,7 @@ def plan_routes(gd: GameData, base_id: str, item_level: int, wants: list[Want], 
     bench_wants = [w for w in wants if w.bench]
     if len(bench_wants) > 1:
         raise InvalidAction("only one bench-crafted mod is supported (multimod is not planned yet)")
-    bench = _Bench(gd, view.base.item_class, bench_wants[0]) if bench_wants else None
+    bench = BenchCraft(gd, view.base.item_class, bench_wants[0]) if bench_wants else None
     rolled_wants = [w for w in wants if not w.bench]
     rolled = Target([ModRequirement(w.mod_type, w.max_tier) for w in rolled_wants])
     finish = [f"Bench craft: {bench.text} ({', '.join(f'{v} {k}' for k, v in bench.cost.items())})"] if bench else []
@@ -259,4 +275,4 @@ def plan_routes(gd: GameData, base_id: str, item_level: int, wants: list[Want], 
     return routes
 
 
-__all__ = ["Want", "Route", "plan_routes"]
+__all__ = ["Want", "Route", "BenchCraft", "plan_routes", "worst_accepted_mods"]

@@ -17,8 +17,8 @@ from urllib.parse import quote
 import httpx
 
 from .. import config
-from ..engine.item import ItemState, ItemView, _tier_family
-from ..engine.modpool import eligible_pool
+from ..engine.item import ItemState, ItemView
+from ..engine.planner import worst_accepted_mods
 from ..knowledge.gamedata import GameData
 
 STATS_URL = "https://www.pathofexile.com/api/trade/data/stats"
@@ -76,23 +76,18 @@ def stat_filters(gd: GameData, item: ItemState, wants: list, explicit: dict[str,
     instead turned into a minimum Elemental DPS (lowest rolls x base attacks per
     second: attack speed mods can only raise it, so it never hides a match)."""
     view = ItemView(gd, item)
-    tags = view.tags()
-    by_type = {}
-    for e in eligible_pool(gd, item.with_(rarity="rare", explicits=())):
-        by_type.setdefault(e.mod.type, e.mod)
+    worst_of = worst_accepted_mods(gd, item, wants)
     filters, notes = [], []
     edps = 0.0
     for w in wants:
         if w.bench:
             notes.append(f"{w.mod_type}: left out, you craft it on the bench.")
             continue
-        mod = by_type.get(w.mod_type)
-        if mod is None:
+        worst = worst_of.get(w.mod_type)
+        if worst is None:
             notes.append(f"{w.mod_type}: cannot roll on this base, left out.")
             continue
-        family = [gd.mods[i] for i in _tier_family(gd, view.base, mod, frozenset(tags))]
-        worst = family[min(w.max_tier, len(family)) - 1] if family else mod
-        local = any(s.startswith("local_") for s, _, _ in mod.stats)
+        local = any(s.startswith("local_") for s, _, _ in worst.stats)
         elemental = [lo for s, lo, _ in worst.stats if _ELEMENTAL.match(s)]
         if view.base.attack_time_ms and len(elemental) == 2:
             edps += sum(elemental) / 2 * 1000 / view.base.attack_time_ms

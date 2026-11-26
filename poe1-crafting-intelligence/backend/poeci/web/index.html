@@ -249,8 +249,7 @@ $("parseGo").onclick = async () => {
       <table><tr><th>Affix</th><th>Text</th><th>Mod type</th><th>Tier</th><th>Identification</th></tr>${rows}</table>
       ${r.valid_actions ? `<p><b>Actions you can use on this item:</b><br>${r.valid_actions.map(a => a.valid ? `<span class="pill ok">${esc(a.name)}</span>` : `<span class="pill no" title="${esc(a.reason)}">${esc(a.name)}</span>`).join(" ")}</p>` : ""}
       ${r.bench_options && r.bench_options.length ? `<details><summary><b>Bench crafts you can add now (${r.bench_options.length})</b></summary><table><tr><th>Affix</th><th>Craft</th><th>Cost</th><th class="num">Chaos</th></tr>` +
-        r.bench_options.map(o => `<tr><td class="${o.affix}">${o.affix}</td><td class="crafted">${esc(o.text).replace(/
-/g, "<br>")}</td><td class="muted">${esc(Object.entries(o.cost).map(([k, v]) => v + " × " + k).join(", "))}</td><td class="num">${o.chaos != null ? num(o.chaos, 1) : "–"}</td></tr>`).join("") + "</table></details>" : ""}
+        r.bench_options.map(o => `<tr><td class="${o.affix}">${o.affix}</td><td class="crafted">${esc(o.text).replace(/\n/g, "<br>")}</td><td class="muted">${esc(Object.entries(o.cost).map(([k, v]) => v + " × " + k).join(", "))}</td><td class="num">${o.chaos != null ? num(o.chaos, 1) : "–"}</td></tr>`).join("") + "</table></details>" : ""}
       <div class="row" style="margin-top:8px">${r.base_name ? '<button class="primary" id="toPlan">Plan routes for this item</button> <button class="primary" id="toTrade">Find similar on trade ↗</button>' : ""}</div>
       <div id="tradeOut" class="small"></div>`;
     if (r.base_name) $("toTrade").onclick = async () => {
@@ -327,6 +326,28 @@ async function loadRoi() {
     });
   } catch (e) { $("roiOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
 }
+// Plain text in Reddit markdown, so the user can ask others whether the route is optimal.
+function shareText(r, i) {
+  const rt = r.routes[i];
+  const chaos = (c) => c == null ? "?" : `${Math.round(c)} chaos` + (r.divine_chaos ? ` (${(c / r.divine_chaos).toFixed(2)} div)` : "");
+  const tier = (w) => w.bench ? "bench craft" : w.max_tier >= 99 ? "any tier" : w.max_tier === 1 ? "tier 1" : `tier 1–${w.max_tier}`;
+  const units = (u) => Object.entries(u).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${Math.round(v * 10) / 10} × ${k}`).join(", ");
+  const costOf = (x) => x.successes ? (x.expected_chaos != null ? `~${chaos(x.expected_chaos)}` : `${units(x.expected_units)} (no price for ${x.missing_prices.join(", ")})`)
+    : x.at_least_chaos != null ? `more than ${chaos(x.at_least_chaos)} (never hit in ${x.tries} simulated tries)` : "not realistic";
+  const lines = [
+    `**Is this the cheapest way to craft this? (PoE1${r.league ? ", " + r.league + " league" : ""})**`, "",
+    `**Base:** ${r.base}, item level ${r.item_level}${r.influences.length ? ", " + r.influences.join("/") + " influence" : ""}`, "",
+    "**Target** (lowest values I accept):",
+    ...r.wants_text.map(w => `- ${w.text.split("\n").join(" / ")} (${tier(w)})`), "",
+    `**Plan: ${rt.name}**`,
+    ...rt.steps.map((s, k) => `${k + 1}. ${s}`), "",
+    `**Expected cost:** ${costOf(rt)}` + (rt.successes ? ` = ${units(rt.expected_units)}; chance per try ${(100 * rt.successes / rt.tries).toFixed(2)}%` : ""),
+  ];
+  const others = r.routes.filter((_, k) => k !== i);
+  if (others.length) lines.push("", "**Other methods I compared:**", ...others.map(x => `- ${x.name}: ${costOf(x)}`));
+  lines.push("", `*Monte Carlo estimate from the game's mod weights (RePoE data ${r.game_version}), prices from poe.ninja${r.prices_as_of ? " (" + String(r.prices_as_of).slice(0, 10) + ")" : ""}. Harvest, beasts and metamod tricks were not considered. Is there a cheaper or safer route?*`);
+  return lines.join("\n");
+}
 $("planGo").onclick = async () => {
   const body = planBody();
   $("planOut").textContent = "Simulating routes… (a few seconds each)";
@@ -360,9 +381,16 @@ $("planGo").onclick = async () => {
           <div class="muted">Chance per try ${pct(rt.successes / rt.tries)} (95% CI ${pct(lo)} – ${pct(hi)}), ${num(rt.tries, 0)} tries simulated. ${range}</div>
           ${rt.notes.length ? `<ul class="warnings">${rt.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
           ${rt.assumptions.length ? `<div class="muted">Assumptions: ${rt.assumptions.map(a => `<code>${esc(a.name)}</code> <span class="warn">(${esc(a.status)})</span>`).join(", ")}</div>` : ""}
+          <div class="row" style="margin-top:6px"><button data-copy="${i}" title="Copies this route as text you can paste into Reddit or Discord to ask if it is optimal">Copy for Reddit</button></div>
         </div>`;
       }).join("") +
-      '<p class="muted">Only standard methods are compared (Chaos, Essences, Alteration/Regal/Exalt, bench). Fossils, Harvest, beasts and metamod tricks are not included yet, so a cheaper route may exist. Costs are expected values: you can be luckier or unluckier.</p>';
+      '<p class="muted">Only standard methods are compared (Chaos, Essences, Fossils (experimental), Alteration/Regal/Exalt, bench). Harvest, beasts and metamod tricks are not included yet, so a cheaper route may exist. Costs are expected values: you can be luckier or unluckier.</p>';
+    $("planOut").querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
+      const text = shareText(r, +b.dataset.copy);
+      try { await navigator.clipboard.writeText(text); b.textContent = "Copied ✓"; }
+      catch { window.prompt("Copy this text (Ctrl+C):", text); }
+      setTimeout(() => { b.textContent = "Copy for Reddit"; }, 2000);
+    });
     if (r.trade_url) $("tradeLink").onclick = () => window.open(r.trade_url, "_blank", "noopener");
     $("saleChaos").oninput = () => showProfit(r);
     showProfit(r);

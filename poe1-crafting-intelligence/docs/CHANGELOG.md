@@ -12,7 +12,10 @@
 - Royale event mods excluded from rollable affixes (poedb: "Royale Modifiers").
 - Speed: mod pools cached (~2.8x faster Chaos simulation on a bow, ~1.9x on a ring).
 - Fix (found by the new stress test): the shared SQLite connection crashed under concurrent requests; it is now locked.
-- `scripts/stress_test.py`; 52 automated tests.
+- `scripts/stress_test.py`.
+- Route Planner: *Copy for Reddit* button per route (markdown with readable target mods, steps, cost, alternatives and data sources). Plan response now includes readable wanted-mod texts (`worst_accepted_mods`, shared with the trade links).
+- Fix: a broken regular expression in the page script (bench-craft list) stopped every tab from working; `test_web.py` now checks the page script with `node --check`.
+- 53 automated tests.
 
 ## 0.1.0 (2026-11-26): Milestone 1
 
