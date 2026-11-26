@@ -69,3 +69,18 @@ def test_planner_offers_harvest_and_lock_routes(gd):
     names = [r.name for r in plan_routes(gd, RING, 84, wants, budget_s=0.1)]
     assert "Harvest reforge: fire (experimental)" in names
     assert "Lock prefixes, scour, exalt" in names and "Lock suffixes, scour, exalt" not in names  # no suffix lock in test data
+
+
+def test_fracture_swap_and_same_type_reforge(gd):
+    r = random.Random(4)
+    four = rare(gd, "Life3", "Phys1", "Fire2", "Str1")
+    fr = apply(gd, four, "fracturing", r)
+    assert sum(mi.fractured for mi in fr.explicits) == 1
+    with pytest.raises(InvalidAction):
+        apply(gd, rare(gd, "Life3", "Fire2"), "fracturing", r)  # needs 4 mods
+    sw = apply(gd, four, "harvest_swap", r, kind="resistance", from_element="fire", to_element="cold")
+    assert any(mi.mod_id.startswith("Cold") for mi in sw.explicits) and not any(mi.mod_id.startswith("Fire") for mi in sw.explicits)
+    assert cost_of(gd, "harvest_swap", {"kind": "damage", "from_element": "fire", "to_element": "cold"}, four) == {
+        "Wild Crystallised Lifeforce": 300, "Primal Crystallised Lifeforce": 300, "Crystallised Rancour": 1}
+    same = apply(gd, four, "harvest_reforge_same", r)
+    assert len(same.explicits) >= 4  # never fewer mods (assumption)

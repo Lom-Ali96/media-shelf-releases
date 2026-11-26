@@ -466,7 +466,7 @@ def _valid_actions(g: GameData, item: ItemState) -> list[dict]:
 
     out = []
     for a in ACTIONS.values():
-        if a.id in ("essence", "fossil", "bench_craft", "harvest_reforge", "harvest_add_remove"):
+        if a.id in ("essence", "fossil", "bench_craft", "harvest_reforge", "harvest_add_remove", "harvest_swap"):
             continue  # need parameters
         try:
             a.fn(g, item, random.Random(0))

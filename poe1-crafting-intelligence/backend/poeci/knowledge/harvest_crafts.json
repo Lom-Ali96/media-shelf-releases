@@ -1,17 +1,126 @@
 {
   "_source": "poedb.tw/us/Horticrafting (Horticrafting Station, 73 crafts), read 2026-11-26; Harvest itself confirmed for 3.30 by the 3.30.0 patch notes. The RePoE export does not contain Harvest crafts, so this list is maintained by hand: re-check it after every patch.",
-  "_lifeforce": {"Wild": "Wild Crystallised Lifeforce", "Vivid": "Vivid Crystallised Lifeforce", "Primal": "Primal Crystallised Lifeforce", "Sacred": "Sacred Crystallised Lifeforce", "Rancour": "Crystallised Rancour"},
+  "_lifeforce": {
+    "Wild": "Wild Crystallised Lifeforce",
+    "Vivid": "Vivid Crystallised Lifeforce",
+    "Primal": "Primal Crystallised Lifeforce",
+    "Sacred": "Sacred Crystallised Lifeforce",
+    "Rancour": "Crystallised Rancour"
+  },
   "reforge": {
-    "fire": {"Wild": 50}, "cold": {"Vivid": 50}, "lightning": {"Primal": 50}, "physical": {"Vivid": 50},
-    "life": {"Wild": 75}, "defences": {"Primal": 75}, "chaos": {"Vivid": 100}, "attack": {"Wild": 75},
-    "caster": {"Primal": 75}, "speed": {"Vivid": 150}, "critical": {"Primal": 150},
-    "minion": {"Primal": 200, "Rancour": 3}, "elemental": {"Wild": 200, "Rancour": 1},
-    "attribute": {"Vivid": 200, "Rancour": 2}, "mana": {"Primal": 200, "Rancour": 2}, "drop": {"Vivid": 200, "Rancour": 1}
+    "fire": {
+      "Wild": 50
+    },
+    "cold": {
+      "Vivid": 50
+    },
+    "lightning": {
+      "Primal": 50
+    },
+    "physical": {
+      "Vivid": 50
+    },
+    "life": {
+      "Wild": 75
+    },
+    "defences": {
+      "Primal": 75
+    },
+    "chaos": {
+      "Vivid": 100
+    },
+    "attack": {
+      "Wild": 75
+    },
+    "caster": {
+      "Primal": 75
+    },
+    "speed": {
+      "Vivid": 150
+    },
+    "critical": {
+      "Primal": 150
+    },
+    "minion": {
+      "Primal": 200,
+      "Rancour": 3
+    },
+    "elemental": {
+      "Wild": 200,
+      "Rancour": 1
+    },
+    "attribute": {
+      "Vivid": 200,
+      "Rancour": 2
+    },
+    "mana": {
+      "Primal": 200,
+      "Rancour": 2
+    },
+    "drop": {
+      "Vivid": 200,
+      "Rancour": 1
+    }
   },
   "add_remove": {
-    "fire": {"Wild": 15000, "Sacred": 1}, "cold": {"Vivid": 15000, "Sacred": 1}, "lightning": {"Primal": 15000, "Sacred": 1},
-    "physical": {"Vivid": 15000, "Sacred": 1}, "life": {"Wild": 17500, "Sacred": 1}, "defences": {"Primal": 17500, "Sacred": 1},
-    "chaos": {"Vivid": 17500, "Sacred": 1}, "attack": {"Wild": 17500, "Sacred": 1}, "caster": {"Primal": 17500, "Sacred": 1},
-    "speed": {"Vivid": 20000, "Sacred": 1}, "critical": {"Primal": 20000, "Sacred": 1}
+    "fire": {
+      "Wild": 15000,
+      "Sacred": 1
+    },
+    "cold": {
+      "Vivid": 15000,
+      "Sacred": 1
+    },
+    "lightning": {
+      "Primal": 15000,
+      "Sacred": 1
+    },
+    "physical": {
+      "Vivid": 15000,
+      "Sacred": 1
+    },
+    "life": {
+      "Wild": 17500,
+      "Sacred": 1
+    },
+    "defences": {
+      "Primal": 17500,
+      "Sacred": 1
+    },
+    "chaos": {
+      "Vivid": 17500,
+      "Sacred": 1
+    },
+    "attack": {
+      "Wild": 17500,
+      "Sacred": 1
+    },
+    "caster": {
+      "Primal": 17500,
+      "Sacred": 1
+    },
+    "speed": {
+      "Vivid": 20000,
+      "Sacred": 1
+    },
+    "critical": {
+      "Primal": 20000,
+      "Sacred": 1
+    }
+  },
+  "swap": {
+    "_rule": "Change a fire/cold/lightning resistance (or damage) modifier into a similar-tier modifier of another element. Cost: 300 lifeforce of the FROM element's type + 300 of the TO element's type; damage swaps also cost 1 Crystallised Rancour (poedb Horticrafting; matches the 3.30 patch notes).",
+    "element_lifeforce": {
+      "fire": "Wild",
+      "cold": "Primal",
+      "lightning": "Vivid"
+    },
+    "amount": 300,
+    "damage_extra": {
+      "Rancour": 1
+    }
+  },
+  "reforge_same_types": {
+    "Wild": 200
   }
 }

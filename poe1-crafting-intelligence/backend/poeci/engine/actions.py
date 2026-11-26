@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Callable
 
 from ..knowledge.gamedata import GameData, Mod
-from .item import JEWEL_DOMAINS, ItemState, ItemView, ModInstance
+from .item import JEWEL_DOMAINS, ItemState, ItemView, ModInstance, _tier_family, tier_index
 from .modpool import WeightFn, eligible_pool
 
 _ASSUMPTIONS = json.loads((Path(__file__).parents[1] / "knowledge" / "assumptions.json").read_text())
@@ -116,11 +116,11 @@ def regal(gd, item, rng, **_):
     return out or item.with_(rarity="rare")
 
 
-def _reforge_rare(gd, item, rng, forced: tuple[ModInstance, ...] = (), weight_fn=None):
+def _reforge_rare(gd, item, rng, forced: tuple[ModInstance, ...] = (), weight_fn=None, count: int | None = None):
     v = ItemView(gd, item)
     kept = tuple(mi for mi in item.explicits if v.is_protected(mi)) + forced
     base_item = item.with_(rarity="rare", explicits=kept)
-    return fill_to(gd, base_item, _count_from(rng, _rare_count_name(v)), rng, weight_fn)
+    return fill_to(gd, base_item, count or _count_from(rng, _rare_count_name(v)), rng, weight_fn)
 
 
 def alchemy(gd, item, rng, **_):
@@ -283,6 +283,69 @@ def harvest_add_remove(gd, item, rng, *, tag: str, **_):
     return out
 
 
+def harvest_reforge_same(gd, item, rng, **_):
+    """Reforge a Rare item, being more likely to receive the same modifier types.
+    Weight multiplier and 'never fewer mods' come from assumptions.json (outdated report)."""
+    v = ItemView(gd, item)
+    _common_checks(v)
+    _require(item.rarity == "rare", "Harvest reforges need a rare item")
+    present = {m.type for _, m in v.mods() if not v.is_protected(_)}
+    mult = assumption("harvest_same_type_multiplier")["value"]
+    weight_fn = lambda mod, w: w * mult if mod.type in present else w  # noqa: E731
+    count = _count_from(rng, _rare_count_name(v))
+    if assumption("harvest_same_type_keeps_mod_count")["value"]:
+        count = max(count, len(item.explicits))
+    return _reforge_rare(gd, item, rng, weight_fn=weight_fn, count=count)
+
+
+_ELEMENTS = ("Fire", "Cold", "Lightning")
+
+
+def harvest_swap(gd, item, rng, *, kind: str, from_element: str, to_element: str, **_):
+    """Change a <from> resistance/damage modifier into a similar-tier <to> modifier."""
+    v = ItemView(gd, item)
+    _common_checks(v)
+    src, dst = from_element.title(), to_element.title()
+    _require(src in _ELEMENTS and dst in _ELEMENTS and src != dst, "elements must be two of fire, cold, lightning")
+    _require(kind in ("resistance", "damage"), "kind must be resistance or damage")
+    marker = "Resist" if kind == "resistance" else "Damage"
+    tags = v.tags()
+    for i, (mi, m) in enumerate(v.mods()):
+        if mi.crafted or src not in m.type or marker not in m.type or any(e in m.type for e in _ELEMENTS if e != src):
+            continue  # hybrids (two elements) are not swappable
+        target_type = m.type.replace(src, dst, 1)
+        twin = next((x for x in gd.affix_mods_by_domain.get(v.base.domain, [])
+                     if x.type == target_type and x.generation_type == m.generation_type), None)
+        if twin is None:
+            continue
+        family = _tier_family(gd, v.base, twin, frozenset(tags))
+        if not family:
+            continue
+        tier, _n = tier_index(gd, v.base, m, tags)
+        new = gd.mods[family[min(max(tier, 1), len(family)) - 1]]  # "similar tier": same tier number
+        out = list(item.explicits)
+        out[i] = ModInstance(new.id, roll_values(new, rng), mi.fractured, mi.crafted)
+        return item.with_(explicits=tuple(out))
+    raise InvalidAction(f"no {src.lower()} {kind} modifier that can be changed to {dst.lower()}")
+
+
+def fracturing(gd, item, rng, **_):
+    """Fracturing Orb: fracture a random modifier on a rare item with at least 4 modifiers
+    (not influenced, not already fractured). Crafted mods excluded: see assumptions.json."""
+    v = ItemView(gd, item)
+    _common_checks(v)
+    _require(item.rarity == "rare", "Fracturing Orb needs a rare item")
+    _require(len(item.explicits) >= 4, "Fracturing Orb needs at least 4 modifiers")
+    _require(not item.influences, "Fracturing Orb cannot be used on influenced items")
+    _require(not any(mi.fractured for mi in item.explicits), "item is already fractured")
+    skip_crafted = assumption("fracture_excludes_crafted")["value"]
+    idx = [i for i, mi in enumerate(item.explicits) if not (skip_crafted and mi.crafted)]
+    pick = rng.choice(idx)
+    out = list(item.explicits)
+    out[pick] = ModInstance(out[pick].mod_id, out[pick].values, True, out[pick].crafted)
+    return item.with_(explicits=tuple(out))
+
+
 def _beast_swap(gd, item, rng, remove: str, add: str):
     v = ItemView(gd, item)
     _common_checks(v)
@@ -331,6 +394,10 @@ ACTIONS: dict[str, ActionInfo] = {
         ActionInfo("remove_crafted", "Crafting bench: remove crafted modifiers", remove_crafted, None),
         ActionInfo("harvest_reforge", "Harvest: reforge with a tagged modifier", harvest_reforge, None, ("rare_mod_count",), status="experimental"),
         ActionInfo("harvest_add_remove", "Harvest: add a tagged modifier, remove a random one", harvest_add_remove, None, status="experimental"),
+        ActionInfo("harvest_reforge_same", "Harvest: reforge, more likely the same modifier types", harvest_reforge_same, None,
+                   ("rare_mod_count", "harvest_same_type_multiplier", "harvest_same_type_keeps_mod_count"), status="experimental"),
+        ActionInfo("harvest_swap", "Harvest: change a resistance/damage modifier to another element", harvest_swap, None, status="experimental"),
+        ActionInfo("fracturing", "Fracturing Orb", fracturing, "Fracturing Orb", ("fracture_excludes_crafted",), status="experimental"),
         ActionInfo("beast_suffix_for_prefix", "Beastcraft (Farric Lynx Alpha): add a suffix, remove a random prefix", beast_suffix_for_prefix, "Farric Lynx Alpha", status="experimental"),
         ActionInfo("beast_prefix_for_suffix", "Beastcraft (Farric Wolf Alpha): add a prefix, remove a random suffix", beast_prefix_for_suffix, "Farric Wolf Alpha", status="experimental"),
     ]

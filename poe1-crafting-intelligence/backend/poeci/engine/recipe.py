@@ -35,8 +35,16 @@ class Condition:
     any_of: tuple[ModRequirement, ...] = ()
     min_open_prefixes: int = 0
     min_open_suffixes: int = 0
+    min_mods: int = 0
+    fractured: tuple[str, ...] = ()  # mod types that must be fractured
 
     def met(self, gd: GameData, item: ItemState) -> bool:
+        if len(item.explicits) < self.min_mods:
+            return False
+        if self.fractured:
+            done = {gd.mods[mi.mod_id].type for mi in item.explicits if mi.fractured}
+            if not set(self.fractured) <= done:
+                return False
         if self.all_of and not Target(list(self.all_of)).met_by(gd, item):
             return False
         if self.any_of and not any(Target([r]).met_by(gd, item) for r in self.any_of):
@@ -91,6 +99,17 @@ def cost_of(gd: GameData, action: str, params: dict, item: ItemState) -> dict[st
     if action == "remove_crafted":
         opt = next((o for o in gd.bench_options if (o.get("actions") or {}).get("remove_crafted_mods")), None)
         return _names(gd, (opt or {}).get("cost"))
+    if action == "harvest_reforge_same":
+        return {HARVEST["_lifeforce"][k]: v for k, v in HARVEST["reforge_same_types"].items()}
+    if action == "harvest_swap":
+        sw = HARVEST["swap"]
+        out: dict[str, float] = {}
+        for el in (params["from_element"].lower(), params["to_element"].lower()):
+            name = HARVEST["_lifeforce"][sw["element_lifeforce"][el]]
+            out[name] = out.get(name, 0) + sw["amount"]
+        if params["kind"] == "damage":
+            out.update({HARVEST["_lifeforce"][k]: v for k, v in sw["damage_extra"].items()})
+        return out
     if action in ("harvest_reforge", "harvest_add_remove"):
         table = HARVEST["reforge" if action == "harvest_reforge" else "add_remove"]
         if params["tag"] not in table:
