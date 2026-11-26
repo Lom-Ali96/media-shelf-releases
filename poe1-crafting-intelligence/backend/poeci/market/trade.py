@@ -5,7 +5,8 @@ opens in their own browser.
 To pre-fill mod filters it needs the trade site's stat ids. Those come from the
 public static list /api/trade/data/stats, downloaded once and again only when
 the imported game data version changes (cached in data/trade_stats.json).
-Verified 2026-11-26: list reachable, league ids match poe.ninja names ("Covens").
+Verified 2026-11-26: list reachable, league ids match poe.ninja names ("Covens"),
+and the ?q= link opens with all filters applied (when already logged in).
 """
 from __future__ import annotations
 

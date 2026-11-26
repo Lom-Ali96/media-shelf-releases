@@ -312,7 +312,7 @@ $("planGo").onclick = async () => {
           <label>Sale price (chaos) <input id="saleChaos" type="number" min="0" step="1" style="width:110px" value="${r.saved_sale_chaos ?? ""}"></label>
           <label>&nbsp;<button class="primary" id="savePlan">Save to ROI board</button></label>
         </div>
-        <div class="muted">The link opens a search for similar items in your browser; the app itself never searches the trade site. Look at the cheapest few listings and enter a realistic price.</div>
+        <div class="muted">The link opens a search for similar items in your browser (log in to the trade site first, or the filters get lost); the app itself never searches the trade site. Look at the cheapest few listings and enter a realistic price.</div>
         ${r.trade_notes.length ? `<ul class="warnings">${r.trade_notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
       </div>` +
       r.routes.map((rt, i) => {

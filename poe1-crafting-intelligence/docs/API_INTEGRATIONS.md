@@ -29,7 +29,7 @@
 - To pre-fill mod filters it downloads the public static stat list `/api/trade/data/stats` (≈2 MB) once and caches it in `data/trade_stats.json`; it downloads it again only when the imported game data version changes. Approved by the user on 2026-11-26.
 - Mapping: the mod text of the *worst accepted tier* with numbers replaced by `#` is matched to the `explicit` group; mods with a `local_` stat prefer the `(Local)` entry; "reduced" is matched as "increased" with a negative maximum. Single-value lines get a minimum; "Adds # to #" lines get none (how the site combines the two values is unverified). Bench mods and mods that can't roll on the base are left out, with a note.
 - Trade league ids match poe.ninja's names (`Covens`, checked 2026-11-26).
-- Not yet checked: that the `?q=` link opens with all filters applied. Check this the first time you use it.
+- Verified by the user on 2026-11-26: the `?q=` link opens with base, rarity and stat filters applied (Covens). If you are not logged in, the login redirect drops the filters: log in first, then click the button again.
 
 ## RePoE (implemented, verified)
 
