@@ -1,0 +1,28 @@
+[project]
+name = "poeci"
+version = "0.1.0"
+description = "Personal Path of Exile 1 crafting intelligence system (milestone 1: knowledge + core rules engine)"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn>=0.29",
+  "pydantic>=2.6",
+  "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["poeci*"]
+
+[tool.setuptools.package-data]
+poeci = ["web/*.html", "knowledge/*.json", "storage/migrations/*.sql"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["realdata: needs a downloaded game-data snapshot (skipped otherwise)"]

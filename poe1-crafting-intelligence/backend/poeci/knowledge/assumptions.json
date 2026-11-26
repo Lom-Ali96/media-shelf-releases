@@ -1,0 +1,24 @@
+{
+  "_doc": "Numbers the game files do NOT contain. Each entry is used by the engine and is surfaced in the UI/API next to any result that depends on it. Replace a value only with a better-sourced one and update status/source.",
+  "rare_mod_count": {
+    "value": {"4": 8, "5": 3, "6": 1},
+    "applies_to": "Chaos Orb, Orb of Alchemy, Essences: number of explicit mods on a non-jewel rare",
+    "status": "community_measured",
+    "source": "Long-standing community data-collection results, also the default model used by Craft of Exile. Not published by GGG.",
+    "last_reviewed": "2026-11-26"
+  },
+  "rare_jewel_mod_count": {
+    "value": {"3": 1, "4": 1},
+    "applies_to": "Rare jewels / abyss jewels (max 2 prefixes + 2 suffixes)",
+    "status": "placeholder_unverified",
+    "source": "No reliable source found yet. 50/50 placeholder; results depending on it are flagged.",
+    "last_reviewed": "2026-11-26"
+  },
+  "magic_mod_count": {
+    "value": {"1": 1, "2": 1},
+    "applies_to": "Orb of Transmutation, Orb of Alteration: 1 or 2 mods on a magic item",
+    "status": "placeholder_unverified",
+    "source": "No reliable source found yet. 50/50 placeholder; results depending on it are flagged.",
+    "last_reviewed": "2026-11-26"
+  }
+}

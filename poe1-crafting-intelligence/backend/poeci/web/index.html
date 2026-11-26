@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PoE1 Crafting Intelligence</title>
+<style>
+  :root {
+    --bg: #0d0b09; --panel: #17130f; --panel2: #201a14; --line: #3a2f22;
+    --text: #e6dccb; --muted: #9c8f7a; --gold: #c8a96a; --prefix: #8fb0ff; --suffix: #b6e29a;
+    --warn: #e8a33c; --bad: #e06a5b; --good: #7ccf7c; --crafted: #b8daf2; --fract: #a29160;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 10px 18px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+  header h1 { font-size: 16px; margin: 0; color: var(--gold); letter-spacing: .5px; font-weight: 600; }
+  nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  nav button { background: none; border: 1px solid transparent; color: var(--muted); padding: 6px 12px; border-radius: 4px; cursor: pointer; font: inherit; }
+  nav button.active, nav button:hover { color: var(--text); border-color: var(--line); background: var(--panel2); }
+  main { padding: 18px; max-width: 1280px; margin: 0 auto; }
+  section { display: none; } section.active { display: block; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; margin-bottom: 14px; }
+  .card h2 { margin: 0 0 10px; font-size: 14px; color: var(--gold); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+  .kv { background: var(--panel2); border-radius: 4px; padding: 8px 10px; }
+  .kv .k { color: var(--muted); font-size: 12px; } .kv .v { font-size: 15px; font-variant-numeric: tabular-nums; }
+  input, select, textarea { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; font: inherit; }
+  textarea { width: 100%; min-height: 220px; font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+  button.primary { background: #5a4422; color: #f3e6cb; border: 1px solid #8a6a35; border-radius: 4px; padding: 6px 14px; cursor: pointer; font: inherit; }
+  button.primary:hover { background: #6d5229; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+  label { color: var(--muted); font-size: 12px; display: flex; flex-direction: column; gap: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; position: sticky; top: 0; background: var(--panel); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .scroll { max-height: 560px; overflow: auto; }
+  .prefix { color: var(--prefix); } .suffix { color: var(--suffix); } .crafted { color: var(--crafted); } .fractured { color: var(--fract); }
+  .warn { color: var(--warn); } .bad { color: var(--bad); } .good { color: var(--good); } .muted { color: var(--muted); }
+  .pill { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11.5px; border: 1px solid var(--line); white-space: nowrap; }
+  .pill.ok { color: var(--good); border-color: #3c6b3c; } .pill.part { color: var(--warn); border-color: #6b5326; }
+  .pill.no { color: var(--bad); border-color: #6b2f28; } .pill.exp { color: #c79be8; border-color: #563a6b; }
+  ul.warnings { margin: 0; padding-left: 18px; } ul.warnings li { color: var(--warn); }
+  .bar { height: 6px; background: var(--panel2); border-radius: 3px; overflow: hidden; min-width: 60px; }
+  .bar > i { display: block; height: 100%; background: var(--gold); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 900px) { .two { grid-template-columns: 1fr; } }
+  .small { font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>PoE1 Crafting Intelligence</h1>
+  <nav id="nav">
+    <button data-s="overview" class="active">Overview</button>
+    <button data-s="pool">Mod Pool</button>
+    <button data-s="analyzer">Item Analyzer</button>
+    <button data-s="sim">Simulator</button>
+    <button data-s="coverage">Coverage</button>
+    <button data-s="settings">Settings</button>
+  </nav>
+</header>
+<main>
+  <section id="overview" class="active">
+    <div class="card"><h2>Status</h2><div id="statusGrid" class="grid"></div></div>
+    <div class="card"><h2>Warnings</h2><ul id="warnings" class="warnings"></ul></div>
+    <div class="card small muted">
+      Every probability shown is either <b>exact</b> (normalised game-data weights) or a labelled <b>Monte Carlo estimate</b> with a 95% interval.
+      Values that the game files do not contain (e.g. how many mods a Chaos Orb rolls) come from <code>assumptions.json</code> and are shown with their source.
+      This tool never performs in-game actions.
+    </div>
+  </section>
+
+  <section id="pool">
+    <div class="card">
+      <h2>Mod pool for a base</h2>
+      <div class="row">
+        <label>Base <input id="poolBase" list="baseList" value="Sapphire Ring" size="28"></label>
+        <datalist id="baseList"></datalist>
+        <label>Item level <input id="poolIlvl" type="number" value="84" min="1" max="100" style="width:80px"></label>
+        <label>Rarity <select id="poolRarity"><option>rare</option><option>magic</option></select></label>
+        <label>Influences <input id="poolInfl" placeholder="shaper, hunter" size="18"></label>
+        <label>Filter <input id="poolFilter" placeholder="life, resist..." size="16"></label>
+        <label>&nbsp;<button class="primary" id="poolGo">Show</button></label>
+      </div>
+      <div id="poolMeta" class="small muted"></div>
+      <div class="scroll"><table id="poolTable"></table></div>
+    </div>
+  </section>
+
+  <section id="analyzer">
+    <div class="two">
+      <div class="card">
+        <h2>Paste item (Ctrl+C or Ctrl+Alt+C in game)</h2>
+        <textarea id="itemText" placeholder="Hover an item in Path of Exile, press Ctrl+Alt+C, paste here"></textarea>
+        <div class="row" style="margin-top:8px"><button class="primary" id="parseGo">Analyze</button>
+          <span class="small muted">Ctrl+Alt+C (advanced) identifies tiers exactly.</span></div>
+      </div>
+      <div class="card"><h2>Result</h2><div id="parseOut" class="small muted">Nothing analysed yet.</div></div>
+    </div>
+  </section>
+
+  <section id="sim">
+    <div class="card">
+      <h2>Repeat an action until target</h2>
+      <div class="row">
+        <label>Base <input id="simBase" list="baseList" value="Sapphire Ring" size="24"></label>
+        <label>Item level <input id="simIlvl" type="number" value="84" style="width:70px"></label>
+        <label>Start rarity <select id="simRarity"><option>normal</option><option>magic</option><option selected>rare</option></select></label>
+        <label>Action <select id="simAction"></select></label>
+        <label>Essence name <input id="simEssence" placeholder="Deafening Essence of Greed" size="24"></label>
+        <label>Fossils (comma) <input id="simFossils" placeholder="Pristine Fossil" size="18"></label>
+      </div>
+      <div class="row">
+        <label>Target mod types <input id="simTarget" value="IncreasedLife:2" size="40" title="ModType:maxTier, comma separated. Mod types are shown in Mod Pool."></label>
+        <label>Runs <input id="simRuns" type="number" value="500" style="width:80px"></label>
+        <label>Max attempts <input id="simMax" type="number" value="1000" style="width:90px"></label>
+        <label>Seed <input id="simSeed" type="number" value="1" style="width:70px"></label>
+        <label>&nbsp;<button class="primary" id="simGo">Simulate</button></label>
+      </div>
+      <div class="small muted">Optional: paste an item in the Item Analyzer first and tick <label style="display:inline-flex;flex-direction:row;gap:4px"><input type="checkbox" id="simFromItem"> start from that item</label></div>
+    </div>
+    <div class="card"><h2>Result</h2><div id="simOut" class="small muted">No simulation yet.</div></div>
+  </section>
+
+  <section id="coverage">
+    <div class="card"><h2>Crafting coverage</h2><div id="covGrid" class="grid"></div><p id="covNote" class="small muted"></p></div>
+    <div class="card"><h2>Mechanics registry</h2><div class="scroll"><table id="covTable"></table></div></div>
+  </section>
+
+  <section id="settings">
+    <div class="card">
+      <h2>League</h2>
+      <div class="row"><label>League name (exactly as on poe.ninja) <input id="league" size="30" placeholder="e.g. Covens of Umbra"></label>
+        <label>&nbsp;<button class="primary" id="saveLeague">Save</button></label></div>
+    </div>
+    <div class="card">
+      <h2>Data</h2>
+      <div class="row"><button class="primary" id="checkUpdates">Check for new game data</button>
+        <button class="primary" id="fetchMarket">Fetch prices (poe.ninja)</button></div>
+      <div class="row"><label>Manual price: item name <input id="ovName" placeholder="Chaos Orb" size="22"></label>
+        <label>chaos value <input id="ovValue" type="number" step="0.01" style="width:90px"></label>
+        <label>&nbsp;<button class="primary" id="saveOverride">Save price</button></label></div>
+      <pre id="dataOut" class="small muted"></pre>
+    </div>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pct = (p) => p == null ? "–" : (p * 100).toFixed(p < 0.001 ? 4 : 2) + "%";
+const num = (x, d = 1) => x == null ? "–" : Number(x).toLocaleString(undefined, {maximumFractionDigits: d});
+async function api(path, opts = {}) {
+  const r = await fetch(path, {headers: {"Content-Type": "application/json"}, ...opts});
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail ?? body));
+  return body;
+}
+document.querySelectorAll("#nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("active", x === b));
+  document.querySelectorAll("main section").forEach(s => s.classList.toggle("active", s.id === b.dataset.s));
+  if (b.dataset.s === "coverage") loadCoverage();
+});
+const kv = (k, v) => `<div class="kv"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>`;
+
+async function loadStatus() {
+  try {
+    const s = await api("/api/status");
+    const g = s.game_data || {};
+    $("statusGrid").innerHTML = [
+      kv("Imported game data", esc(s.imported_game_data ?? "none")),
+      kv("Newest known game data", esc(s.latest_known_remote_game_data?.value ?? "not checked")),
+      kv("Rules reviewed for patch", esc(s.mechanics_verified_for_patch)),
+      kv("Rules valid for data", s.rules_verified_for_current_data ? '<span class="good">yes</span>' : '<span class="bad">NO</span>'),
+      kv("League", esc(s.league ?? "not set")),
+      kv("Last market update", esc(s.latest_market_update ?? "never")),
+      kv("Craftable bases", num(g.craftable_bases, 0)),
+      kv("Affix mods", num(g.affix_mods, 0)),
+      kv("Engine", esc(s.engine_version)),
+    ].join("");
+    $("warnings").innerHTML = s.warnings.length ? s.warnings.map(w => `<li>${esc(w)}</li>`).join("") : '<li class="good" style="color:var(--good)">No warnings.</li>';
+    if (s.league) $("league").value = s.league;
+  } catch (e) { $("warnings").innerHTML = `<li>${esc(e.message)}</li>`; }
+}
+async function loadBases() {
+  try { const bs = await api("/api/bases?limit=2000"); $("baseList").innerHTML = bs.map(b => `<option value="${esc(b.name)}">${esc(b.item_class)}</option>`).join(""); } catch {}
+}
+async function loadActions() {
+  const as = await api("/api/actions");
+  $("simAction").innerHTML = as.map(a => `<option value="${a.id}" ${a.id === "chaos" ? "selected" : ""}>${esc(a.name)}${a.status === "experimental" ? " (experimental)" : ""}</option>`).join("");
+}
+
+$("poolGo").onclick = async () => {
+  const q = new URLSearchParams({base: $("poolBase").value, ilvl: $("poolIlvl").value, rarity: $("poolRarity").value, influences: $("poolInfl").value});
+  try {
+    const p = await api("/api/modpool?" + q);
+    const f = $("poolFilter").value.toLowerCase();
+    const mods = p.mods.filter(m => !f || m.text.toLowerCase().includes(f) || m.type.toLowerCase().includes(f));
+    $("poolMeta").innerHTML = `${esc(p.base)} (${esc(p.item_class)}), ilvl ${p.item_level}. ${p.mods.length} rollable mods, total weight ${num(p.total_weight,0)}. Probabilities: ${esc(p.probability_kind)}. Tags: ${esc(p.tags.join(", "))}`;
+    const max = Math.max(...mods.map(m => m.probability), 0.0001);
+    $("poolTable").innerHTML = `<tr><th>Affix</th><th>Mod type</th><th>Tier</th><th>Name</th><th>Text</th><th>ilvl</th><th class="num">Weight</th><th class="num">P(next roll)</th><th></th></tr>` +
+      mods.map(m => `<tr><td class="${m.affix}">${m.affix}</td><td>${esc(m.type)}</td><td>T${m.tier}/${m.tiers}</td><td>${esc(m.name)}</td><td class="${m.affix}">${esc(m.text).replace(/\n/g,"<br>")}</td><td class="num">${m.ilvl}</td><td class="num">${num(m.weight,0)}</td><td class="num">${pct(m.probability)}</td><td><div class="bar"><i style="width:${(m.probability/max*100).toFixed(1)}%"></i></div></td></tr>`).join("");
+  } catch (e) { $("poolMeta").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+};
+
+$("parseGo").onclick = async () => {
+  try {
+    const r = await api("/api/items/parse", {method: "POST", body: JSON.stringify({text: $("itemText").value})});
+    const rows = r.mods.map(m => {
+      const cls = m.crafted ? "crafted" : m.fractured ? "fractured" : m.kind;
+      const st = m.status === "matched" ? '<span class="pill ok">matched</span>' : m.status === "ambiguous" ? `<span class="pill part">ambiguous: ${m.candidates.length}</span>` : '<span class="pill no">unmatched</span>';
+      return `<tr><td class="${cls}">${esc(m.kind)}${m.crafted ? " (crafted)" : ""}${m.fractured ? " (fractured)" : ""}</td><td class="${cls}">${esc(m.lines.join(" / "))}</td><td>${esc(m.mod_type ?? "")}</td><td>${m.tier ? "T" + m.tier : ""}</td><td>${st}</td></tr>`;
+    }).join("");
+    $("parseOut").innerHTML = `
+      <div class="grid">${kv("Base", esc(r.base_name || "?"))}${kv("Rarity", esc(r.rarity))}${kv("Item level", esc(r.item_level ?? "?"))}${kv("Influence", esc(r.influences.join(", ") || "none"))}
+      ${r.item_state_complete ? kv("Open prefixes / suffixes", `${r.open_prefixes} / ${r.open_suffixes}`) : ""}</div>
+      ${r.warnings.length ? `<ul class="warnings">${r.warnings.map(w => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
+      <p class="muted">Implicits: ${esc(r.implicits.join(" / ") || "none")}</p>
+      <table><tr><th>Affix</th><th>Text</th><th>Mod type</th><th>Tier</th><th>Identification</th></tr>${rows}</table>
+      ${r.valid_actions ? `<p><b>Actions you can use on this item:</b><br>${r.valid_actions.map(a => a.valid ? `<span class="pill ok">${esc(a.name)}</span>` : `<span class="pill no" title="${esc(a.reason)}">${esc(a.name)}</span>`).join(" ")}</p>` : ""}`;
+  } catch (e) { $("parseOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+};
+
+$("simGo").onclick = async () => {
+  const target = $("simTarget").value.split(",").map(s => s.trim()).filter(Boolean).map(s => { const [t, tier] = s.split(":"); return {mod_type: t.trim(), max_tier: tier ? +tier : 99}; });
+  const params = {};
+  if ($("simAction").value === "essence") params.essence_name = $("simEssence").value;
+  if ($("simAction").value === "fossil") params.fossil_names = $("simFossils").value.split(",").map(s => s.trim()).filter(Boolean);
+  const body = {base: $("simBase").value, item_level: +$("simIlvl").value, rarity: $("simRarity").value, action: $("simAction").value, params, target,
+    runs: +$("simRuns").value, max_attempts: +$("simMax").value, seed: +$("simSeed").value, item_text: $("simFromItem").checked ? $("itemText").value : null};
+  $("simOut").textContent = "Running…";
+  try {
+    const r = await api("/api/simulate", {method: "POST", body: JSON.stringify(body)});
+    const [lo, hi] = r.per_attempt_ci95;
+    $("simOut").innerHTML = `
+      ${r.rules_verified_for_current_data ? "" : '<p class="bad">Crafting rules have not been reviewed for this patch. Treat results as unverified.</p>'}
+      <div class="grid">
+        ${kv("P(success) per attempt", `${pct(r.per_attempt_probability)} <span class="muted small">95% CI ${pct(lo)} – ${pct(hi)}</span>`)}
+        ${r.exact_first_attempt_probability != null ? kv("Exact P(first attempt)", pct(r.exact_first_attempt_probability)) : ""}
+        ${kv("Avg attempts", num(r.attempts_mean))}${kv("Median attempts", num(r.attempts_median))}
+        ${kv("90% / 95% / 99% within", `${num(r.attempts_p90,0)} / ${num(r.attempts_p95,0)} / ${num(r.attempts_p99,0)}`)}
+        ${kv("Runs reaching target within cap", pct(r.success_within_cap))}
+        ${kv("Expected cost", r.expected_cost_chaos != null ? num(r.expected_cost_chaos) + " c" : '<span class="muted">no price (set league / fetch prices)</span>')}
+        ${r.p95_cost_chaos != null ? kv("95% cost bound", num(r.p95_cost_chaos) + " c") : ""}
+      </div>
+      <p class="muted">${esc(r.notes.join(" "))} Runs: ${r.runs}, seed ${r.seed}. Cost counts only the repeated currency, not the base item.</p>
+      ${r.assumptions.length ? "<p><b>Assumptions used:</b></p><ul>" + r.assumptions.map(a => `<li><code>${esc(a.name)}</code> = ${esc(JSON.stringify(a.value))} — <span class="warn">${esc(a.status)}</span>. ${esc(a.source)}</li>`).join("") + "</ul>" : ""}`;
+  } catch (e) { $("simOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+};
+
+const pillFor = (s) => ({implemented_verified: "ok", implemented_partially_verified: "part", experimental: "exp"}[s] || "no");
+async function loadCoverage() {
+  const c = await api("/api/coverage");
+  $("covGrid").innerHTML = Object.entries(c.by_status).map(([k, v]) => kv(k.replace(/_/g, " "), v)).join("") +
+    (c.game_data ? Object.entries(c.game_data).map(([k, v]) => kv(k.replace(/_/g, " "), esc(v))).join("") : "");
+  $("covNote").textContent = `${c.honesty_note} Registry reviewed for patch ${c.registry_verified_for_patch} on ${c.registry_last_reviewed}.`;
+  $("covTable").innerHTML = "<tr><th>Mechanic</th><th>Category</th><th>Status</th><th>Notes</th></tr>" +
+    c.mechanics.map(m => `<tr><td>${esc(m.name)}</td><td>${esc(m.category)}</td><td><span class="pill ${pillFor(m.status)}">${esc(m.status.replace(/_/g, " "))}</span></td><td class="muted">${esc(m.notes ?? "")}</td></tr>`).join("");
+}
+
+$("saveLeague").onclick = async () => { await api("/api/settings", {method: "POST", body: JSON.stringify({league: $("league").value})}); loadStatus(); };
+$("checkUpdates").onclick = async () => { try { const r = await api("/api/updates/check", {method: "POST"}); $("dataOut").textContent = JSON.stringify(r.remote_game_data ? {remote_game_data: r.remote_game_data} : {error: "could not reach the game-data source"}, null, 2); loadStatus(); } catch (e) { $("dataOut").textContent = e.message; } };
+$("fetchMarket").onclick = async () => { $("dataOut").textContent = "Fetching…"; try { $("dataOut").textContent = JSON.stringify(await api("/api/market/fetch", {method: "POST", body: "{}"}), null, 2); loadStatus(); } catch (e) { $("dataOut").textContent = e.message; } };
+$("saveOverride").onclick = async () => { try { $("dataOut").textContent = JSON.stringify(await api("/api/market/override", {method: "POST", body: JSON.stringify({name: $("ovName").value, chaos_value: +$("ovValue").value})}), null, 2); } catch (e) { $("dataOut").textContent = e.message; } };
+
+loadStatus(); loadBases(); loadActions();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Downloaded game-data snapshots and local user database (re-creatable, large or private)
+data/
+*.sqlite3
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+backups/
+*.egg-info/
