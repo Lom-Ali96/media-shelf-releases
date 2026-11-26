@@ -9,13 +9,17 @@ Wald's identity the expected currency spent until the first success is
 Routes:
   * Alchemy, then Chaos spam
   * Essence spam (one route per essence that guarantees a wanted mod)
+  * Fossil spam and Harvest tag-reforge spam (experimental)
+  * Lock-and-reforge: Chaos for one side, bench lock, Chaos for the other side,
+    remove the lock (a multi-step recipe, engine/recipe.py)
   * Transmute + Alteration/Augmentation for up to 1 prefix + 1 suffix,
     Regal, then Exalted Orbs (scour and restart on failure)
 A wanted mod marked `bench` is not rolled for: the route keeps a slot open and
 finishes with that bench craft.
 
-Not covered (so real best routes can be cheaper): fossils, Harvest, beasts,
-metamod tricks, fracturing, influence currencies. See KNOWN_LIMITATIONS.md.
+Not covered yet (so real best routes can be cheaper): partial locks, Harvest
+add/remove and swaps as route templates, beastcrafting templates, recombinators,
+fracturing, influence currencies. See docs/MECHANICS_3_30.md.
 """
 from __future__ import annotations
 
@@ -28,7 +32,12 @@ from ..knowledge.gamedata import GameData, Mod
 from .actions import ACTIONS, InvalidAction, apply, assumption
 from .item import ItemState, ItemView, UnsupportedMechanic, _tier_family
 from .modpool import eligible_pool
+from .recipe import HARVEST, Condition, Recipe, Step, cost_of, run_once
 from .simulate import ModRequirement, Target, wilson_interval
+
+
+def _fmt(cost: dict) -> str:
+    return ", ".join(f"{v:g} {k}" for k, v in cost.items())
 
 
 @dataclass(frozen=True)
@@ -231,7 +240,69 @@ def plan_routes(gd: GameData, base_id: str, item_level: int, wants: list[Want], 
             [f"{resonators[len(combo)]} with {', '.join(combo)} until the wanted mods appear"], ["fossil"],
             notes=["Fossil weighting is experimental (not yet checked against Craft of Exile)."])
 
-    # 4. Alteration for up to 1 prefix + 1 suffix, Regal, then Exalted Orbs.
+    # 4. Harvest tag reforge spam (EXPERIMENTAL): for each wanted mod its most specific
+    #    Harvest tag (the tag with the smallest total weight in this pool).
+    tag_weight: Counter = Counter()
+    for e in eligible_pool(gd, normal.with_(rarity="rare")):
+        for t in e.mod.implicit_tags:
+            tag_weight[t] += e.weight
+    harvest_tags: list[str] = []
+    for w in rolled_wants:
+        tags = [t for t in (pool_rare[w.mod_type].implicit_tags if w.mod_type in pool_rare else ()) if t in HARVEST["reforge"]]
+        if tags and (t := min(tags, key=lambda t: tag_weight[t])) not in harvest_tags:
+            harvest_tags.append(t)
+    for tag in harvest_tags[:3]:
+        per = cost_of(gd, "harvest_reforge", {"tag": tag}, rare)
+
+        def hv_try(r, _deadline, tag=tag, per=per):
+            return _ready(gd, apply(gd, rare, "harvest_reforge", r, tag=tag), rolled, bench), per
+
+        add({"Orb of Alchemy": 1}, _run(hv_try, budget_s, max_successes, rng), f"Harvest reforge: {tag} (experimental)",
+            ["Orb of Alchemy on the base",
+             f"Harvest: reforge including a {tag} modifier ({_fmt(per)}) until the wanted mods appear"],
+            ["alchemy", "harvest_reforge"],
+            notes=["Harvest rolling order (tagged mod first, then fill) is experimental."])
+
+    # 5. Lock + scour + exalt (multi-step recipe): roll one side with Chaos, lock it on the
+    #    bench, scour (removes the other side AND the lock, which sits on the other side),
+    #    then Exalted Orbs into the free slots. A failed try starts again from a fresh
+    #    Alchemy. (Chaos on a locked item would also remove the lock, so it is not used.)
+    sides = {g: [w for w in rolled_wants if w.mod_type in pool_rare and pool_rare[w.mod_type].generation_type == g]
+             for g in ("prefix", "suffix")}
+    max_aff = ItemView(gd, rare).max_affixes()
+    req = lambda ws: tuple(ModRequirement(w.mod_type, w.max_tier) for w in ws)  # noqa: E731
+    bench_room = {f"min_open_{bench.gen_type}es": 1} if bench else {}
+    for locked, other in (("suffix", "prefix"), ("prefix", "suffix")):
+        if not sides[locked] or not sides[other] or len(sides[other]) > max_aff:
+            continue
+        group = "ItemGenerationCannotChangeSuffixes" if locked == "suffix" else "ItemGenerationCannotChangePrefixes"
+        opt = next((o for o in gd.bench_options
+                    if (mid := (o.get("actions") or {}).get("add_explicit_mod")) in gd.mods
+                    # by type: the partial locks ("1/2 ... cannot be changed") share the group
+                    and gd.mods[mid].type == group and view.base.item_class in o.get("item_classes", [])), None)
+        if opt is None:
+            continue
+        lock = gd.mods[opt["actions"]["add_explicit_mod"]]
+        recipe = Recipe(f"Lock {locked}es", (
+            Step("chaos", until=Condition(all_of=req(sides[locked]), **{f"min_open_{lock.generation_type}es": 1})),
+            Step("bench_craft", {"mod_id": lock.id}),
+            Step("scouring"),
+            Step("exalted", until=Condition(all_of=req(sides[other]))),  # fails the try once the item is full
+        ), target=Condition(all_of=req(rolled_wants), **bench_room))
+
+        def lock_try(r, deadline, recipe=recipe):
+            return run_once(gd, recipe, rare, r, deadline)
+
+        add({"Orb of Alchemy": 1}, _run(lock_try, budget_s, max_successes, rng), f"Lock {locked}es, scour, exalt",
+            ["Orb of Alchemy on the base",
+             f"Chaos Orb until the wanted {locked}es appear (and a {lock.generation_type} slot is free)",
+             f"Bench craft '{lock.text}' ({_fmt(cost_of(gd, 'bench_craft', {'mod_id': lock.id}, rare))})",
+             f"Orb of Scouring: removes all {other}es and the lock, your {locked}es stay",
+             f"Exalted Orb until the wanted {other}es appear",
+             "If the item fills up without them: start again from a fresh Orb of Alchemy"],
+            ["alchemy", "chaos", "bench_craft", "scouring", "exalted"])
+
+    # 6. Alteration for up to 1 prefix + 1 suffix, Regal, then Exalted Orbs.
     pool = {e.mod.type: e for e in eligible_pool(gd, normal.with_(rarity="magic"))}
     magic: dict[str, Want] = {}
     for w in sorted(rolled_wants, key=lambda w: pool[w.mod_type].probability if w.mod_type in pool else 1):

@@ -242,6 +242,66 @@ def remove_crafted(gd, item, rng, **_):
     return item.with_(explicits=tuple(mi for mi in item.explicits if not mi.crafted))
 
 
+# ------------------------------------------------- Harvest and Bestiary (EXPERIMENTAL)
+# Craft lists come from knowledge/harvest_crafts.json and docs/MECHANICS_3_30.md. The
+# order of rolling (tagged mod first, then fill) is the common understanding, not a
+# published rule, so these actions are experimental until cross-checked.
+def _add_tagged(gd, item, rng, tag: str, gen_types=("prefix", "suffix")) -> ItemState | None:
+    pool = [e for e in eligible_pool(gd, item, gen_types=gen_types) if tag is None or tag in e.mod.implicit_tags]
+    if not pool:
+        return None
+    entry = _weighted_choice(rng, pool, [e.weight for e in pool])
+    return item.with_(explicits=item.explicits + (_instance(entry.mod, rng),))
+
+
+def _remove_random(item: ItemState, v: ItemView, rng, gen_type: str | None = None) -> ItemState:
+    idx = [i for i, (mi, m) in enumerate(v.mods()) if not v.is_protected(mi) and gen_type in (None, m.generation_type)]
+    _require(bool(idx), f"no removable {gen_type or 'modifier'}")
+    drop = rng.choice(idx)
+    return item.with_(explicits=tuple(mi for i, mi in enumerate(item.explicits) if i != drop))
+
+
+def harvest_reforge(gd, item, rng, *, tag: str, **_):
+    """Reforge a Rare item with new random modifiers, including a <tag> modifier."""
+    v = ItemView(gd, item)
+    _common_checks(v)
+    _require(item.rarity == "rare", "Harvest reforges need a rare item")
+    kept = tuple(mi for mi in item.explicits if v.is_protected(mi))
+    out = _add_tagged(gd, item.with_(explicits=kept), rng, tag)
+    _require(out is not None, f"no '{tag}' modifier can roll on this item")
+    return fill_to(gd, out, _count_from(rng, _rare_count_name(v)), rng)
+
+
+def harvest_add_remove(gd, item, rng, *, tag: str, **_):
+    """Add a new <tag> modifier and remove a random modifier (non-influenced items)."""
+    v = ItemView(gd, item)
+    _common_checks(v)
+    _require(item.rarity == "rare", "this Harvest craft needs a rare item")
+    _require(not item.influences, "not usable on influenced items")
+    out = _add_tagged(gd, _remove_random(item, v, rng), rng, tag)
+    _require(out is not None, f"no '{tag}' modifier can be added")
+    return out
+
+
+def _beast_swap(gd, item, rng, remove: str, add: str):
+    v = ItemView(gd, item)
+    _common_checks(v)
+    _require(item.rarity == "rare", "this beastcraft only works on rare items")
+    out = _add_tagged(gd, _remove_random(item, v, rng, remove), rng, None, gen_types=(add,))
+    _require(out is not None, f"no {add} can be added")
+    return out
+
+
+def beast_suffix_for_prefix(gd, item, rng, **_):
+    """Farric Lynx Alpha: add a suffix, remove a random prefix."""
+    return _beast_swap(gd, item, rng, "prefix", "suffix")
+
+
+def beast_prefix_for_suffix(gd, item, rng, **_):
+    """Farric Wolf Alpha: add a prefix, remove a random suffix."""
+    return _beast_swap(gd, item, rng, "suffix", "prefix")
+
+
 @dataclass(frozen=True)
 class ActionInfo:
     id: str
@@ -269,6 +329,10 @@ ACTIONS: dict[str, ActionInfo] = {
         ActionInfo("fossil", "Fossils (resonator)", fossil, None, ("rare_mod_count",), status="experimental"),
         ActionInfo("bench_craft", "Crafting bench: add modifier", bench_craft, None),
         ActionInfo("remove_crafted", "Crafting bench: remove crafted modifiers", remove_crafted, None),
+        ActionInfo("harvest_reforge", "Harvest: reforge with a tagged modifier", harvest_reforge, None, ("rare_mod_count",), status="experimental"),
+        ActionInfo("harvest_add_remove", "Harvest: add a tagged modifier, remove a random one", harvest_add_remove, None, status="experimental"),
+        ActionInfo("beast_suffix_for_prefix", "Beastcraft (Farric Lynx Alpha): add a suffix, remove a random prefix", beast_suffix_for_prefix, "Farric Lynx Alpha", status="experimental"),
+        ActionInfo("beast_prefix_for_suffix", "Beastcraft (Farric Wolf Alpha): add a prefix, remove a random suffix", beast_prefix_for_suffix, "Farric Wolf Alpha", status="experimental"),
     ]
 }
 

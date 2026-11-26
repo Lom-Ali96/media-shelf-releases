@@ -18,7 +18,11 @@
 - Craft Ideas tab: `knowledge/craft_ideas.json` (11 starter targets, validated against the game data), `GET /api/ideas`, `budget_s` option on `POST /api/plan` (0.2–3 s per route).
 - Verification: `scripts/compare_craftofexile.py` compares our mod pools with Craft of Exile's data tier by tier. 10 bases × item level 30/68/86: 29/30 identical; the wand mana-leech difference is explained (our value follows the game file's generation weight). New registry entry `pool.spawn_weights` = implemented_verified (first verified mechanic); reference test added.
 - 3.30 mechanics research (docs/MECHANICS_3_30.md): full 3.30.0 patch notes, game data, poedb Harvest (73 crafts) and Bestiary (78 recipes) lists; registry updated with sources (partial locks are new bench crafts; Harvest, beastcrafting, recombinators, double corruption exist; Gwennen data unpublished).
-- 57 automated tests.
+- Multi-step recipes (`engine/recipe.py`): steps with repeat-until, check, restart or goto, and the real cost of every action (currency, essences, fossils + resonators, bench data, lifeforce, beasts).
+- New experimental actions: Harvest tag reforge, Harvest add/remove (`knowledge/harvest_crafts.json`), Farric Lynx/Wolf beastcrafts. Simulator gets a Harvest tag field and now prices every action type.
+- Planner: Harvest tag-reforge routes and the multi-step "Lock prefixes/suffixes, scour, exalt" route. Fix found while building it: partial locks share the mod group of the full lock, so the lock is now selected by mod type.
+- Beast prices fetched by default.
+- 62 automated tests.
 
 ## 0.1.0 (2026-11-26): Milestone 1
 

@@ -44,11 +44,11 @@ Researched 2026-11-26 for the "all crafting possibilities" goal. Every statement
 
 | # | Mechanic | Data available? | Open questions before building |
 |---|---|---|---|
-| 1 | **Multi-step recipes** (do X until Y, then Z; branch on result) | n/a (engine work) | none |
-| 2 | **Partial and full locks + scour/annul combos** | ✅ bench data with costs | Which mod a partial lock protects (chosen by the player or random) |
-| 3 | **Harvest tag reforges, more/less likely** | ✅ craft list + costs | How "more/less likely" changes the weights (multiplier) must be sourced |
-| 4 | **Harvest add/remove, resistance and damage swaps** | ✅ list + costs | Swap = "similar tier" rule |
-| 5 | **Beastcrafting add/remove (Lynx/Wolf), metamod beast** | ✅ list | Beast prices are not on poe.ninja's default lists → manual price |
+| 1 | ✅ **Multi-step recipes** (do X until Y, then Z; branch on result): `engine/recipe.py` | n/a (engine work) | none |
+| 2 | ✅ full locks: planner route *Lock …, scour, exalt*. ⬜ partial locks | ✅ bench data with costs | Which mod a partial lock protects (chosen by the player or random) |
+| 3 | ✅ Harvest tag reforges (experimental, planner route + Simulator). ⬜ more/less likely | ✅ craft list + costs | How "more/less likely" changes the weights (multiplier) must be sourced |
+| 4 | ✅ Harvest add/remove (experimental action). ⬜ resistance and damage swaps | ✅ list + costs | Swap = "similar tier" rule |
+| 5 | ✅ Lynx/Wolf beastcrafts (experimental actions). ⬜ metamod beast, imprint | ✅ list | Beast prices: poe.ninja Beast category (fetched by default) |
 | 6 | **Recombinators** | ⚠️ rules only | Outcome odds are community-measured; need a source |
 | 7 | Eldritch implicits/currencies, influence currencies, fracturing, veiled/unveil, double corruption | partly (mods in data) | Odds mostly unpublished |
 | – | Gwennen coin flip | ❌ no data | Wait until the option list is published |

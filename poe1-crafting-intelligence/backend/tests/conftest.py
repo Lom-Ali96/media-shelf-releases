@@ -67,6 +67,7 @@ BENCH = [
     {"actions": {"add_explicit_mod": "CraftedCold"}, "item_classes": ["Ring"], "cost": {}, "master": "Bench"},
     {"actions": {"add_explicit_mod": "XItemGenerationCannotRollAttackAffixes"}, "item_classes": ["Ring"], "cost": {}, "master": "Bench"},
     {"actions": {"add_explicit_mod": "XItemGenerationCanHaveMultipleCraftedMods"}, "item_classes": ["Ring"], "cost": {}, "master": "Bench"},
+    {"actions": {"add_explicit_mod": "XMasterItemGenerationCannotChangePrefixes"}, "item_classes": ["Ring"], "cost": {}, "master": "Bench"},
 ]
 
 RING = "Metadata/Items/Rings/Ring1"

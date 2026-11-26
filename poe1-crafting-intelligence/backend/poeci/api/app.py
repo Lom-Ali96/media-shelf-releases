@@ -15,6 +15,7 @@ from ..engine.actions import ACTIONS, InvalidAction
 from ..engine.item import ItemState, ItemView, UnsupportedMechanic, tier_index
 from ..engine.modpool import eligible_pool
 from ..engine.planner import BenchCraft, Want, plan_routes, worst_accepted_mods
+from ..engine.recipe import cost_of
 from ..engine.simulate import ModRequirement, Target, exact_next_mod_probability, simulate_repeat_until
 from ..knowledge import importer
 from ..knowledge.coverage import coverage_report
@@ -74,7 +75,7 @@ class SavePlanIn(PlanIn):
     best_cost_chaos: float | None = Field(None, ge=0)
 
 class FetchIn(BaseModel):
-    categories: list[str] = Field(default_factory=lambda: ["Currency", "Essence", "Fossil", "Resonator"])
+    categories: list[str] = Field(default_factory=lambda: ["Currency", "Essence", "Fossil", "Resonator", "Beast"])
     force: bool = False
 
 class OverrideIn(BaseModel):
@@ -255,7 +256,14 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
             raise HTTPException(422, str(e))
         out = asdict(res)
         info = ACTIONS[body.action]
-        price = poeninja.price_of(st.conn, league(), info.currency) if (info.currency and league()) else None
+        try:  # what one attempt uses: currency, essence, fossils + resonator, lifeforce, beast, bench cost
+            cost = cost_of(g, body.action, body.params, start)
+        except (InvalidAction, KeyError):
+            cost = {}
+        prices = {n: poeninja.price_of(st.conn, league(), n) for n in cost} if league() else {}
+        price = None
+        if cost and prices and all(prices.values()):
+            price = {"chaos_value": sum(v * prices[n]["chaos_value"] for n, v in cost.items()), "uses": cost}
         out["price_per_attempt"] = price
         if price and res.attempts_mean is not None:
             out["expected_cost_chaos"] = res.attempts_mean * price["chaos_value"]
@@ -458,7 +466,7 @@ def _valid_actions(g: GameData, item: ItemState) -> list[dict]:
 
     out = []
     for a in ACTIONS.values():
-        if a.id in ("essence", "fossil", "bench_craft"):
+        if a.id in ("essence", "fossil", "bench_craft", "harvest_reforge", "harvest_add_remove"):
             continue  # need parameters
         try:
             a.fn(g, item, random.Random(0))

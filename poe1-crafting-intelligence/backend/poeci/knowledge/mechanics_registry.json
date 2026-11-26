@@ -12,6 +12,14 @@
       "notes": "Cross-checked 2026-11-26 against Craft of Exile's data (scripts/compare_craftofexile.py): 10 bases x item level 30/68/86 = 30 reference cases; 29 identical tier by tier (presence, required level, weight). Only difference: wand local mana leech (CoE 1000, ours 500 = spawn 1000 x the data's 50% wand generation weight, which CoE applies to the matching life-leech mod but not to mana leech). CoE also rounds 12.5 weights down to 12 (<0.01% effect). Influence pools not yet cross-checked."
     },
     {
+      "id": "recipe.multistep",
+      "name": "Multi-step recipes (repeat until, check, restart/goto)",
+      "category": "core",
+      "status": "implemented_partially_verified",
+      "engine_action": null,
+      "notes": "engine/recipe.py (2026-11-26). Runs any sequence of supported actions with costs; used by the planner's lock route. Tested on fixed cases; outcomes inherit each action's status."
+    },
+    {
       "id": "currency.transmutation",
       "name": "Orb of Transmutation",
       "category": "basic_currency",
@@ -192,7 +200,7 @@
       "name": "Prefix/Suffix Modifiers cannot be changed",
       "category": "metamod",
       "status": "implemented_partially_verified",
-      "notes": "3.30: crafting-bench options in the game data (StrMaster/DexMaster...CannotChangePrefixes/Suffixes). Cost by item type: weapons 4 Divine + 1 Sacred, armour/quivers 4 Divine + 4 Blessed, jewellery 4 Divine + 8 Exalted; recipe drops in Nightmare Maps. Effect modelled; costs match patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26) and data."
+      "notes": "3.30: crafting-bench options in the game data (StrMaster/DexMaster...CannotChangePrefixes/Suffixes). Cost by item type: weapons 4 Divine + 1 Sacred, armour/quivers 4 Divine + 4 Blessed, jewellery 4 Divine + 8 Exalted; recipe drops in Nightmare Maps. Effect modelled; costs match patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26) and data. Planner route 'Lock prefixes/suffixes, scour, exalt' (multi-step recipe): Chaos for one side, bench lock, Scour (removes the other side and the lock), Exalted Orbs; each try consumes a lock."
     },
     {
       "id": "metamod.partial_lock",
@@ -205,15 +213,17 @@
       "id": "harvest.reforge",
       "name": "Harvest (Horticrafting) crafts",
       "category": "harvest",
-      "status": "discovered_not_implemented",
-      "notes": "3.30: Harvest is Sacred Flora inside maps (no subarea); lifeforce Wild/Vivid/Primal (+Sacred, + Crystallised Rancour for some). Crafts (poedb.tw/us/Horticrafting (73 crafts, read 2026-11-26)): 16 tag reforges (e.g. Life 75 Wild, Fire 50 Wild, Speed 150 Vivid, Critical 150 Primal; Minion/Elemental/Attribute/Mana/Drop cost 200 + Rancour), more/less likely same mod types (200 Wild), influence reforges, 11 add-tagged-mod-and-remove-random-mod crafts (15000-20000 + 1 Sacred), 6 resistance swaps (300+300, matches patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)), 6 damage swaps (+1 Rancour), 14 enchants. NOT available: keep prefixes/suffixes, lucky values, standalone augment/remove. Not in the RePoE export: craft list must be stored manually from this source."
+      "status": "experimental",
+      "notes": "IMPLEMENTED (experimental, 2026-11-26): tag reforges (harvest_reforge: one mod with the tag is rolled first, then the item is filled like a Chaos Orb) and add-tagged/remove-random (harvest_add_remove); costs from knowledge/harvest_crafts.json. Rolling order is the common understanding, not a published rule. NOT yet: more/less likely same mod types (effect size unpublished), resistance/damage swaps, influence reforges, enchants. 3.30: Harvest is Sacred Flora inside maps (no subarea); lifeforce Wild/Vivid/Primal (+Sacred, + Crystallised Rancour for some).",
+      "engine_action": "harvest_reforge, harvest_add_remove"
     },
     {
       "id": "bestiary.aspect",
       "name": "Bestiary / beastcrafting",
       "category": "bestiary",
-      "status": "discovered_not_implemented",
-      "notes": "3.30: yellow beasts no longer needed or captured; flask-mod recipes need a red beast (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). Equipment recipes (poedb.tw/us/Bestiary_Recipe (78 recipes, read 2026-11-26; page states no patch version)): add suffix + remove random prefix (Farric Lynx Alpha) and the reverse (Farric Wolf Alpha), rare only; add a crafted meta-modifier to a non-unique item (Wild Bristle Matron); imprint of a magic item (Craicic Croaker); add a mod to Shaper/Elder/conqueror items; max links/sockets; aspects; flask suffixes. Version of the recipe list unconfirmed."
+      "status": "experimental",
+      "notes": "IMPLEMENTED (experimental, 2026-11-26): Farric Lynx Alpha (add a suffix, remove a random prefix) and Farric Wolf Alpha (the reverse), rare items only; beast prices from poe.ninja (Beast category). Not yet: metamod beast, imprints, influence beasts. 3.30: yellow beasts no longer needed or captured; flask-mod recipes need a red beast (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). Equipment recipes (poedb.tw/us/Bestiary_Recipe (78 recipes, read 2026-11-26; page states no patch version)): add suffix + remove random prefix (Farric Lynx Alpha) and the reverse (Farric Wolf Alpha), rare only; add a crafted meta-modifier to a non-unique item (Wild Bristle Matron); imprint of a magic item (Craicic Croaker); add a mod to Shaper/Elder/conqueror items; max links/sockets; aspects; flask suffixes. Version of the recipe list unconfirmed.",
+      "engine_action": "beast_suffix_for_prefix, beast_prefix_for_suffix"
     },
     {
       "id": "fracturing",

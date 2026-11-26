@@ -148,6 +148,7 @@
         <label>Action <select id="simAction"></select></label>
         <label>Essence name <input id="simEssence" placeholder="Deafening Essence of Greed" size="24"></label>
         <label>Fossils (comma) <input id="simFossils" placeholder="Pristine Fossil" size="18"></label>
+        <label>Harvest tag <input id="simTag" placeholder="life, fire, speed..." size="14"></label>
       </div>
       <div class="row">
         <label>Target mod types <input id="simTarget" value="IncreasedLife:2" size="40" title="ModType:maxTier, comma separated. Mod types are shown in Mod Pool."></label>
@@ -471,6 +472,7 @@ $("simGo").onclick = async () => {
   const params = {};
   if ($("simAction").value === "essence") params.essence_name = $("simEssence").value;
   if ($("simAction").value === "fossil") params.fossil_names = $("simFossils").value.split(",").map(s => s.trim()).filter(Boolean);
+  if ($("simAction").value.startsWith("harvest_")) params.tag = $("simTag").value.trim().toLowerCase();
   const body = {base: $("simBase").value, item_level: +$("simIlvl").value, rarity: $("simRarity").value, action: $("simAction").value, params, target,
     runs: +$("simRuns").value, max_attempts: +$("simMax").value, seed: +$("simSeed").value, item_text: $("simFromItem").checked ? $("itemText").value : null};
   $("simOut").textContent = "Running…";
