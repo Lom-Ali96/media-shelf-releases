@@ -84,3 +84,17 @@ def test_fracture_swap_and_same_type_reforge(gd):
         "Wild Crystallised Lifeforce": 300, "Primal Crystallised Lifeforce": 300, "Crystallised Rancour": 1}
     same = apply(gd, four, "harvest_reforge_same", r)
     assert len(same.explicits) >= 4  # never fewer mods (assumption)
+
+
+def test_missing_action_parameters_are_refused(gd):
+    with pytest.raises(InvalidAction, match="missing kind"):
+        apply(gd, rare(gd, "Fire2"), "harvest_swap", random.Random(0))
+    with pytest.raises(InvalidAction, match="missing essence_name"):
+        apply(gd, ItemState(RING, 84), "essence", random.Random(0))
+
+
+def test_planner_offers_fracture_route(gd):
+    wants = [Want("IncreasedLife", 3), Want("FireResistance", 2)]
+    routes = {r.name: r for r in plan_routes(gd, RING, 84, wants, budget_s=0.2)}
+    frac = routes["Fracture, then Chaos (experimental)"]
+    assert frac.tries > 0 and "Fracturing Orb" in (frac.expected_units or frac.at_least_units)

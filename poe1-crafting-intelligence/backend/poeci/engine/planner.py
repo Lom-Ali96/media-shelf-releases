@@ -10,8 +10,8 @@ Routes:
   * Alchemy, then Chaos spam
   * Essence spam (one route per essence that guarantees a wanted mod)
   * Fossil spam and Harvest tag-reforge spam (experimental)
-  * Lock-and-reforge: Chaos for one side, bench lock, Chaos for the other side,
-    remove the lock (a multi-step recipe, engine/recipe.py)
+  * Lock prefixes/suffixes, scour, exalt and Fracture-then-Chaos (multi-step
+    recipes, engine/recipe.py)
   * Transmute + Alteration/Augmentation for up to 1 prefix + 1 suffix,
     Regal, then Exalted Orbs (scour and restart on failure)
 A wanted mod marked `bench` is not rolled for: the route keeps a slot open and
@@ -30,7 +30,7 @@ from dataclasses import dataclass, field
 
 from ..knowledge.gamedata import GameData, Mod
 from .actions import ACTIONS, InvalidAction, apply, assumption
-from .item import ItemState, ItemView, UnsupportedMechanic, _tier_family
+from .item import ItemState, ItemView, UnsupportedMechanic, _tier_family, tier_index
 from .modpool import eligible_pool
 from .recipe import HARVEST, Condition, Recipe, Step, cost_of, run_once
 from .simulate import ModRequirement, Target, wilson_interval
@@ -302,7 +302,36 @@ def plan_routes(gd: GameData, base_id: str, item_level: int, wants: list[Want], 
              "If the item fills up without them: start again from a fresh Orb of Alchemy"],
             ["alchemy", "chaos", "bench_craft", "scouring", "exalted"])
 
-    # 6. Alteration for up to 1 prefix + 1 suffix, Regal, then Exalted Orbs.
+    # 6. Fracture the hardest wanted mod, then Chaos for the rest (EXPERIMENTAL like the orb).
+    #    A wrong fracture ruins the base: the try fails and starts again on a new base.
+    if len(rolled_wants) >= 2 and not influences:
+        tags_rare = ItemView(gd, rare).tags()
+
+        def chance(w: Want) -> float:
+            return sum(e.probability for e in eligible_pool(gd, normal.with_(rarity="rare"))
+                       if e.mod.type == w.mod_type and tier_index(gd, view.base, e.mod, tags_rare)[0] <= w.max_tier)
+
+        hardest = min(rolled_wants, key=chance)
+        rest = [w for w in rolled_wants if w is not hardest]
+        frac = Recipe("Fracture", (
+            Step("chaos", until=Condition(all_of=req([hardest]), min_mods=4)),
+            Step("fracturing", check=Condition(fractured=(hardest.mod_type,))),
+            Step("chaos", until=Condition(all_of=req(rest))),
+        ), target=Condition(all_of=req(rolled_wants), **bench_room))
+
+        def frac_try(r, deadline, recipe=frac):
+            return run_once(gd, recipe, rare, r, deadline)
+
+        add({"Orb of Alchemy": 1}, _run(frac_try, budget_s, max_successes, rng), "Fracture, then Chaos (experimental)",
+            ["Orb of Alchemy on the base",
+             f"Chaos Orb until {hardest.mod_type} appears on an item with at least 4 mods",
+             "Fracturing Orb: if it fractures a different mod, the base is lost: start again on a new base",
+             f"Chaos Orb until the rest appear ({', '.join(w.mod_type for w in rest)}); the fractured mod always stays"],
+            ["alchemy", "chaos", "fracturing"],
+            notes=["Every failed fracture also costs a new base item (not included unless you set its price).",
+                   "Fracturing is experimental: crafted mods are assumed not to be fracturable."])
+
+    # 7. Alteration for up to 1 prefix + 1 suffix, Regal, then Exalted Orbs.
     pool = {e.mod.type: e for e in eligible_pool(gd, normal.with_(rarity="magic"))}
     magic: dict[str, Want] = {}
     for w in sorted(rolled_wants, key=lambda w: pool[w.mod_type].probability if w.mod_type in pool else 1):

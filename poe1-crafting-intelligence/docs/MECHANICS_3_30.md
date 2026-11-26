@@ -46,11 +46,11 @@ Researched 2026-11-26 for the "all crafting possibilities" goal. Every statement
 |---|---|---|---|
 | 1 | ✅ **Multi-step recipes** (do X until Y, then Z; branch on result): `engine/recipe.py` | n/a (engine work) | none |
 | 2 | ✅ full locks: planner route *Lock …, scour, exalt*. ⬜ partial locks | ✅ bench data with costs | Which mod a partial lock protects (chosen by the player or random) |
-| 3 | ✅ Harvest tag reforges (experimental, planner route + Simulator). ⬜ more/less likely | ✅ craft list + costs | How "more/less likely" changes the weights (multiplier) must be sourced |
-| 4 | ✅ Harvest add/remove (experimental action). ⬜ resistance and damage swaps | ✅ list + costs | Swap = "similar tier" rule |
+| 3 | ✅ Harvest tag reforges (experimental, planner route + Simulator). ✅ more likely (×90 from an outdated report, flagged). ⬜ less likely | ✅ craft list + costs | How "more/less likely" changes the weights (multiplier) must be sourced |
+| 4 | ✅ Harvest add/remove and resistance/damage swaps (experimental actions; swap keeps the tier number) | ✅ list + costs | Swap = "similar tier" rule |
 | 5 | ✅ Lynx/Wolf beastcrafts (experimental actions). ⬜ metamod beast, imprint | ✅ list | Beast prices: poe.ninja Beast category (fetched by default) |
 | 6 | **Recombinators** | ⚠️ rules only | Outcome odds are community-measured; need a source |
-| 7 | Eldritch implicits/currencies, influence currencies, fracturing, veiled/unveil, double corruption | partly (mods in data) | Odds mostly unpublished |
+| 7 | ✅ Fracturing Orb (experimental, poedb rule; planner route *Fracture, then Chaos*). ⬜ Eldritch implicits/currencies, influence currencies, veiled/unveil, double corruption | partly (mods in data) | Odds mostly unpublished; whether crafted mods can be fractured |
 | – | Gwennen coin flip | ❌ no data | Wait until the option list is published |
 
 Lifeforce, Rancour and beast prices: poe.ninja's economy covers some of these; anything missing is entered as a manual price (Settings).

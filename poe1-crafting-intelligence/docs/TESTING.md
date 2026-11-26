@@ -34,7 +34,7 @@ Run all tests:
 
 **Promotion rule:** a mechanic moves to `implemented_verified` only after at least 3 reference cases agree with an independent source (Craft of Exile or a logged in-game test) within the Monte Carlo confidence interval. Those cases are then added as tests.
 
-M1 result: **31 passed** (including the real-data tests). Now: **62 passed**.
+M1 result: **31 passed** (including the real-data tests). Now: **65 passed**.
 
 ### Cross-check with Craft of Exile
 

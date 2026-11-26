@@ -214,8 +214,8 @@
       "name": "Harvest (Horticrafting) crafts",
       "category": "harvest",
       "status": "experimental",
-      "notes": "IMPLEMENTED (experimental, 2026-11-26): tag reforges (harvest_reforge: one mod with the tag is rolled first, then the item is filled like a Chaos Orb) and add-tagged/remove-random (harvest_add_remove); costs from knowledge/harvest_crafts.json. Rolling order is the common understanding, not a published rule. NOT yet: more/less likely same mod types (effect size unpublished), resistance/damage swaps, influence reforges, enchants. 3.30: Harvest is Sacred Flora inside maps (no subarea); lifeforce Wild/Vivid/Primal (+Sacred, + Crystallised Rancour for some).",
-      "engine_action": "harvest_reforge, harvest_add_remove"
+      "notes": "IMPLEMENTED (experimental, 2026-11-26): tag reforges (harvest_reforge: one mod with the tag is rolled first, then the item is filled like a Chaos Orb) and add-tagged/remove-random (harvest_add_remove); costs from knowledge/harvest_crafts.json. Rolling order is the common understanding, not a published rule. Also implemented: 'more likely the same modifier types' (harvest_reforge_same, using the x90 multiplier and never-fewer-mods rule from an outdated 2020 report: assumptions.json) and fire/cold/lightning resistance or damage swaps to the same tier number (harvest_swap; 'similar tier' interpreted as same tier number). NOT yet: 'less likely' (unquantified), influence reforges, enchants. 3.30: Harvest is Sacred Flora inside maps (no subarea); lifeforce Wild/Vivid/Primal (+Sacred, + Crystallised Rancour for some).",
+      "engine_action": "harvest_reforge, harvest_add_remove, harvest_reforge_same, harvest_swap"
     },
     {
       "id": "bestiary.aspect",
@@ -229,8 +229,9 @@
       "id": "fracturing",
       "name": "Fracturing Orb",
       "category": "fracture",
-      "status": "discovered_not_implemented",
-      "notes": "Fractured mods ARE modelled (protected) when present on a parsed item. 3.30: Tier-5 magic drops can be fractured; fractured drops removed from many sources (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). Fracturing Orb not mentioned in the notes; not implemented."
+      "status": "experimental",
+      "notes": "IMPLEMENTED (experimental, 2026-11-26): Fracturing Orb fractures a random modifier on a rare item with at least 4 modifiers; not usable on influenced or already fractured items (poedb.tw/us/Fracturing_Orb, current). Crafted mods are excluded (assumption fracture_excludes_crafted, unverified). Fractured mods are protected from all removal. Fractured mods ARE modelled (protected) when present on a parsed item. 3.30: Tier-5 magic drops can be fractured; fractured drops removed from many sources (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). Fracturing Orb not mentioned in the notes; not implemented.",
+      "engine_action": "fracturing"
     },
     {
       "id": "recombinator",

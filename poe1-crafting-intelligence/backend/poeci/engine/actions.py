@@ -10,6 +10,7 @@ unsupported by the coverage registry instead of being approximated.
 """
 from __future__ import annotations
 
+import inspect
 import json
 import random
 from dataclasses import dataclass
@@ -407,4 +408,9 @@ ACTIONS: dict[str, ActionInfo] = {
 def apply(gd: GameData, item: ItemState, action_id: str, rng: random.Random, **params) -> ItemState:
     if action_id not in ACTIONS:
         raise InvalidAction(f"unknown or unsupported action {action_id!r}")
-    return ACTIONS[action_id].fn(gd, item, rng, **params)
+    fn = ACTIONS[action_id].fn
+    missing = [n for n, p in inspect.signature(fn).parameters.items()
+               if p.kind is p.KEYWORD_ONLY and p.default is p.empty and n not in params]
+    if missing:
+        raise InvalidAction(f"{ACTIONS[action_id].name}: missing {', '.join(missing)}")
+    return fn(gd, item, rng, **params)

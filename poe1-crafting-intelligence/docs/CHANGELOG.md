@@ -22,7 +22,10 @@
 - New experimental actions: Harvest tag reforge, Harvest add/remove (`knowledge/harvest_crafts.json`), Farric Lynx/Wolf beastcrafts. Simulator gets a Harvest tag field and now prices every action type.
 - Planner: Harvest tag-reforge routes and the multi-step "Lock prefixes/suffixes, scour, exalt" route. Fix found while building it: partial locks share the mod group of the full lock, so the lock is now selected by mod type.
 - Beast prices fetched by default.
-- 62 automated tests.
+- Fracturing Orb (experimental; poedb rule), Harvest element swaps (same tier number) and Harvest "more likely the same modifier types" (×90 from an outdated report, flagged in assumptions.json). Recipe conditions gain `min_mods` and `fractured`.
+- Planner: "Fracture, then Chaos" route (fracture the hardest wanted mod, restart on a wrong fracture). Simulator: Harvest swap field.
+- Fix: an action called without its required parameters (e.g. an essence without a name) crashed with HTTP 500; the engine now answers "missing …".
+- 65 automated tests.
 
 ## 0.1.0 (2026-11-26): Milestone 1
 
