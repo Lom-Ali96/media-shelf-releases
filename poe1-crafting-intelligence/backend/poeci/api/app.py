@@ -20,6 +20,7 @@ from ..knowledge import importer
 from ..knowledge.coverage import coverage_report
 from ..knowledge.gamedata import GameData
 from ..market import poeninja, trade
+from ..parsing import pob
 from ..parsing.clipboard import ItemParser
 from ..storage import db
 from ..updates import versions
@@ -31,7 +32,10 @@ class SettingsIn(BaseModel):
     league: str
 
 class ParseIn(BaseModel):
-    text: str
+    text: str = Field(max_length=20_000)
+
+class PobIn(BaseModel):
+    code: str = Field(max_length=2_000_000)
 
 class Requirement(BaseModel):
     mod_type: str
@@ -184,6 +188,23 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
             resp["open_suffixes"] = view.open_slots("suffix")
             resp["valid_actions"] = _valid_actions(g, state)
         return resp
+
+    @app.post("/api/pob")
+    def pob_import(body: PobIn):
+        """Equipped items from a Path of Building code, each converted to Ctrl+C text and parsed."""
+        g = gd()
+        try:
+            entries = pob.items(body.code)
+        except pob.PobError as e:
+            raise HTTPException(422, str(e))
+        parser = ItemParser(g)
+        for e in entries:
+            if "text" in e:
+                p = parser.parse(e["text"])
+                e.update(name=p.name, base=p.base_name, rarity=p.rarity, item_level=p.item_level,
+                         mods=len(p.mods), matched=sum(m.status == "matched" for m in p.mods),
+                         ambiguous=sum(m.status == "ambiguous" for m in p.mods), warnings=p.warnings)
+        return {"items": entries, "assumed_item_level": pob.ASSUMED_ITEM_LEVEL}
 
     # ------------------------------------------------------------ simulation
     @app.post("/api/simulate")

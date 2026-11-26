@@ -286,8 +286,11 @@ class ItemParser:
         while i < len(mods):
             pm = mods[i]
             if i + 1 < len(mods) and mods[i + 1].crafted == pm.crafted and mods[i + 1].fractured == pm.fractured:
-                pair = [pm.lines[0], mods[i + 1].lines[0]]
-                hits = [(m, v) for m in self._candidate_mods(item, pm.crafted) if "\n" in m.text and (v := _match_lines(m, pair)) is not None]
+                a, b = pm.lines[0], mods[i + 1].lines[0]
+                for pair in ([a, b], [b, a]):  # Path of Building lists hybrid lines in its own order
+                    hits = [(m, v) for m in self._candidate_mods(item, pm.crafted) if "\n" in m.text and (v := _match_lines(m, pair)) is not None]
+                    if hits:
+                        break
                 if hits:
                     merged = ParsedMod(lines=pair, kind="unknown", crafted=pm.crafted, fractured=pm.fractured)
                     self._settle(merged, hits)

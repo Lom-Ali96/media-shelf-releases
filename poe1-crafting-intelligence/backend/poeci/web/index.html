@@ -99,6 +99,13 @@
       </div>
       <div class="card"><h2>Result</h2><div id="parseOut" class="small muted">Nothing analysed yet.</div></div>
     </div>
+    <div class="card">
+      <h2>Import a character (Path of Building code)</h2>
+      <div class="small muted">In Path of Building: Import/Export Build → Generate → Copy. On a poe.ninja character page, use its Path of Building export and copy the code. Paste it here.</div>
+      <textarea id="pobCode" style="min-height:70px" placeholder="eNrtfWl3..."></textarea>
+      <div class="row" style="margin-top:8px"><button class="primary" id="pobGo">Import items</button></div>
+      <div id="pobOut" class="small muted"></div>
+    </div>
   </section>
 
   <section id="plan">
@@ -248,6 +255,20 @@ $("parseGo").onclick = async () => {
       renderWants(); showTab("plan");
     };
   } catch (e) { $("parseOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+};
+
+$("pobGo").onclick = async () => {
+  $("pobOut").textContent = "Reading build…";
+  try {
+    const r = await api("/api/pob", {method: "POST", body: JSON.stringify({code: $("pobCode").value})});
+    $("pobOut").innerHTML = `<table><tr><th>Slot</th><th>Item</th><th>Rarity</th><th>Item level</th><th>Mods identified</th><th></th></tr>` +
+      r.items.map((e, i) => `<tr><td>${esc(e.slot)}</td><td>${esc(e.name ?? "")} <span class="muted">${esc(e.base ?? "")}</span></td><td>${esc(e.rarity ?? "")}</td>
+        <td>${e.item_level ?? "–"}${e.item_level_assumed ? ' <span class="warn" title="made in Path of Building: no item level, assumed">(assumed)</span>' : ""}</td>
+        <td>${e.error ? `<span class="bad">${esc(e.error)}</span>` : e.rarity === "Unique" ? '<span class="muted">unique: not analysed</span>' : `${e.matched}/${e.mods}${e.ambiguous ? ` <span class="warn">(${e.ambiguous} ambiguous)</span>` : ""}`}</td>
+        <td>${e.text && e.rarity !== "Unique" ? `<button data-pob="${i}">Analyze</button>` : ""}</td></tr>`).join("") + "</table>" +
+      '<p class="muted">PoB stores rolled values, not tiers: a value that fits two tiers is shown as ambiguous. Copy the real item with Ctrl+Alt+C for exact tiers.</p>';
+    $("pobOut").querySelectorAll("[data-pob]").forEach(b => b.onclick = () => { $("itemText").value = r.items[+b.dataset.pob].text; $("parseGo").click(); window.scrollTo(0, 0); });
+  } catch (e) { $("pobOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
 };
 
 let lastParsed = null, planWants = [];
