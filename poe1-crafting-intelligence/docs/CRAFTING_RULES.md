@@ -42,4 +42,4 @@ Mods of the same `type` and affix type that can spawn on the base, ordered by re
 
 **Protected mods:** fractured mods, prefixes while "Prefix Modifiers cannot be changed" is present, and suffixes likewise.
 
-**Refused:** corrupted items, unreleased or legacy bases, and partial locks ("1/2 Prefix Modifiers cannot be changed"), which raise `UnsupportedMechanic`.
+**Refused:** corrupted items, unreleased or legacy bases, and partial locks ("1/2 Prefix Modifiers cannot be changed", new 3.30 bench crafts for 1/2 Divine), which raise `UnsupportedMechanic` until it is sourced which mod a partial lock protects.

@@ -3,50 +3,330 @@
   "verified_for_patch": "3.30",
   "last_reviewed": "2026-11-26",
   "mechanics": [
-    {"id": "pool.spawn_weights", "name": "Mod pools and spawn weights (which mods can roll, tiers, item-level gates, weights)", "category": "core", "status": "implemented_verified", "engine_action": null, "notes": "Cross-checked 2026-11-26 against Craft of Exile's data (scripts/compare_craftofexile.py): 10 bases x item level 30/68/86 = 30 reference cases; 29 identical tier by tier (presence, required level, weight). Only difference: wand local mana leech (CoE 1000, ours 500 = spawn 1000 x the data's 50% wand generation weight, which CoE applies to the matching life-leech mod but not to mana leech). CoE also rounds 12.5 weights down to 12 (<0.01% effect). Influence pools not yet cross-checked."},
-    {"id": "currency.transmutation", "name": "Orb of Transmutation", "category": "basic_currency", "status": "implemented_partially_verified", "engine_action": "transmutation", "notes": "1 vs 2 mod split is a placeholder assumption (assumptions.json: magic_mod_count)."},
-    {"id": "currency.alteration", "name": "Orb of Alteration", "category": "basic_currency", "status": "implemented_partially_verified", "engine_action": "alteration", "notes": "Same 1/2 mod placeholder as Transmutation."},
-    {"id": "currency.augmentation", "name": "Orb of Augmentation", "category": "basic_currency", "status": "implemented_partially_verified", "engine_action": "augmentation"},
-    {"id": "currency.regal", "name": "Regal Orb", "category": "basic_currency", "status": "implemented_partially_verified", "engine_action": "regal"},
-    {"id": "currency.alchemy", "name": "Orb of Alchemy", "category": "basic_currency", "status": "implemented_partially_verified", "engine_action": "alchemy", "notes": "Mod count 4/5/6 = 8:3:1 (community-measured)."},
-    {"id": "currency.chaos", "name": "Chaos Orb", "category": "basic_currency", "status": "implemented_partially_verified", "engine_action": "chaos", "notes": "Mod count 4/5/6 = 8:3:1 (community-measured). Interaction with prefix/suffix lock modelled as: locked side kept, total count drawn from the same distribution."},
-    {"id": "currency.exalted", "name": "Exalted Orb", "category": "basic_currency", "status": "implemented_partially_verified", "engine_action": "exalted"},
-    {"id": "currency.annulment", "name": "Orb of Annulment", "category": "basic_currency", "status": "implemented_partially_verified", "engine_action": "annulment", "notes": "Uniform over removable explicit mods; fractured and metamod-locked mods are protected."},
-    {"id": "currency.scouring", "name": "Orb of Scouring", "category": "basic_currency", "status": "implemented_partially_verified", "engine_action": "scouring", "notes": "Rarity after scouring an item that keeps fractured mods is UNVERIFIED (engine keeps rarity)."},
-    {"id": "currency.divine", "name": "Divine Orb", "category": "basic_currency", "status": "implemented_partially_verified", "engine_action": "divine", "notes": "Rerolls explicit values uniformly within each stat range; fractured values kept."},
-    {"id": "currency.blessed", "name": "Blessed Orb", "category": "basic_currency", "status": "discovered_not_implemented", "notes": "Implicit values are not modelled yet."},
-    {"id": "currency.chance", "name": "Orb of Chance", "category": "basic_currency", "status": "discovered_not_implemented"},
-    {"id": "currency.vaal", "name": "Vaal Orb / corruption", "category": "corruption", "status": "discovered_not_implemented", "notes": "Corrupted items are rejected by every action (correct), but corruption outcomes are not modelled."},
-    {"id": "corruption.double", "name": "Double corruption (Vaal temple / Altar)", "category": "corruption", "status": "unknown", "notes": "Availability in 3.30 must be verified."},
-    {"id": "essence.standard", "name": "Essences (Whispering to Deafening)", "category": "essence", "status": "implemented_partially_verified", "engine_action": "essence", "notes": "Forced mod + rare reforge from game data. 'Shrieking/Deafening can reforge rares' encoded from community knowledge, needs in-game confirmation for 3.30."},
-    {"id": "essence.corruption_only", "name": "Corruption-only essences (Hysteria, Insanity, Horror, Delirium, ...)", "category": "essence", "status": "implemented_partially_verified", "engine_action": "essence"},
-    {"id": "essence.remnant_of_corruption", "name": "Remnant of Corruption", "category": "essence", "status": "discovered_not_implemented"},
-    {"id": "fossil.resonator", "name": "Fossils + Resonators", "category": "fossil", "status": "experimental", "engine_action": "fossil", "notes": "Weight multipliers by mod tag. Not yet modelled: added/forced mods (Glyphic, Tangled...), mirrored, sockets, quality, corrupted essence chance, 'lucky' rolls."},
-    {"id": "bench.add_mod", "name": "Crafting bench: add modifier", "category": "bench", "status": "implemented_partially_verified", "engine_action": "bench_craft", "notes": "Validated against bench options present in the imported game data."},
-    {"id": "bench.remove_crafted", "name": "Crafting bench: remove crafted modifiers", "category": "bench", "status": "implemented_partially_verified", "engine_action": "remove_crafted"},
-    {"id": "bench.sockets", "name": "Bench sockets/links/colours", "category": "bench", "status": "discovered_not_implemented"},
-    {"id": "metamod.multimod", "name": "Can have up to 3 Crafted Modifiers", "category": "metamod", "status": "implemented_partially_verified"},
-    {"id": "metamod.cannot_roll_attack", "name": "Cannot roll Attack Modifiers", "category": "metamod", "status": "implemented_partially_verified", "notes": "Blocks mods carrying the 'attack' mod tag."},
-    {"id": "metamod.cannot_roll_caster", "name": "Cannot roll Caster Modifiers", "category": "metamod", "status": "implemented_partially_verified", "notes": "Blocks mods carrying the 'caster' mod tag."},
-    {"id": "metamod.prefix_suffix_lock", "name": "Prefix/Suffix Modifiers cannot be changed", "category": "metamod", "status": "implemented_partially_verified", "notes": "Effect modelled. These mods exist in the 3.30 game files but are NOT crafting-bench options in the 3.30 data; how they are obtained in 3.30 is unverified."},
-    {"id": "metamod.partial_lock", "name": "1 / 2 Prefix (Suffix) Modifier(s) cannot be changed", "category": "metamod", "status": "unsupported", "notes": "Engine refuses items carrying these rather than guessing."},
-    {"id": "harvest.reforge", "name": "Harvest reforges / augments / removes", "category": "harvest", "status": "discovered_not_implemented", "notes": "Current 3.30 Harvest crafts must be enumerated from game data first."},
-    {"id": "bestiary.aspect", "name": "Bestiary (aspects, imprint, split, Craicic beasts)", "category": "bestiary", "status": "discovered_not_implemented"},
-    {"id": "fracturing", "name": "Fracturing Orb", "category": "fracture", "status": "discovered_not_implemented", "notes": "Fractured mods ARE modelled (protected from removal) when present on a parsed item."},
-    {"id": "recombinator", "name": "Recombinators", "category": "recombinator", "status": "unknown", "notes": "Availability in 3.30 must be verified."},
-    {"id": "synthesis", "name": "Synthesised items / implicits", "category": "synthesis", "status": "discovered_not_implemented"},
-    {"id": "influence.add", "name": "Conqueror exalts / Awakener's Orb / Orb of Dominance / Maven's Orb", "category": "influence", "status": "discovered_not_implemented", "notes": "Influence tags already widen the mod pool correctly; the currencies that add influence are not modelled."},
-    {"id": "eldritch.implicits", "name": "Eldritch implicits, Ichors, Embers, Eldritch Chaos/Exalt/Annul", "category": "eldritch", "status": "discovered_not_implemented"},
-    {"id": "veiled.unveil", "name": "Veiled mods and unveiling", "category": "veiled", "status": "discovered_not_implemented"},
-    {"id": "catalysts", "name": "Catalysts / quality", "category": "quality", "status": "discovered_not_implemented"},
-    {"id": "anointments", "name": "Anointments", "category": "other", "status": "discovered_not_implemented"},
-    {"id": "enchantments", "name": "Enchantments (lab, Heist, Harvest)", "category": "other", "status": "discovered_not_implemented"},
-    {"id": "cluster_jewels", "name": "Cluster jewel crafting", "category": "jewel", "status": "discovered_not_implemented", "notes": "Cluster mods depend on enchant + passive count, not modelled yet."},
-    {"id": "jewels.regular", "name": "Regular / abyss jewel crafting", "category": "jewel", "status": "implemented_partially_verified", "notes": "Pool and 2+2 affix limit modelled; rare jewel mod count is a placeholder."},
-    {"id": "flasks", "name": "Flask crafting (magic)", "category": "flask", "status": "implemented_partially_verified", "notes": "Transmute/alt/aug pool modelled. Flask enchantments (Enkindling/Instilling), tinctures not modelled."},
-    {"id": "maps", "name": "Map crafting", "category": "map", "status": "unsupported", "notes": "Out of scope until item crafting is solid."},
-    {"id": "gems", "name": "Gem quality / corruption", "category": "gem", "status": "unsupported"},
-    {"id": "league.3_30", "name": "3.30 Covens of Umbra league crafting (if any)", "category": "league", "status": "unknown", "notes": "Research needed: no 3.30 crafting-specific mechanic has been verified yet."},
-    {"id": "removed.scarabs", "name": "Scarabs (replaced by Threads in 3.30)", "category": "atlas", "status": "removed", "notes": "Not a crafting mechanic; listed so old strategies relying on scarab-driven farming are flagged."}
+    {
+      "id": "pool.spawn_weights",
+      "name": "Mod pools and spawn weights (which mods can roll, tiers, item-level gates, weights)",
+      "category": "core",
+      "status": "implemented_verified",
+      "engine_action": null,
+      "notes": "Cross-checked 2026-11-26 against Craft of Exile's data (scripts/compare_craftofexile.py): 10 bases x item level 30/68/86 = 30 reference cases; 29 identical tier by tier (presence, required level, weight). Only difference: wand local mana leech (CoE 1000, ours 500 = spawn 1000 x the data's 50% wand generation weight, which CoE applies to the matching life-leech mod but not to mana leech). CoE also rounds 12.5 weights down to 12 (<0.01% effect). Influence pools not yet cross-checked."
+    },
+    {
+      "id": "currency.transmutation",
+      "name": "Orb of Transmutation",
+      "category": "basic_currency",
+      "status": "implemented_partially_verified",
+      "engine_action": "transmutation",
+      "notes": "1 vs 2 mod split is a placeholder assumption (assumptions.json: magic_mod_count)."
+    },
+    {
+      "id": "currency.alteration",
+      "name": "Orb of Alteration",
+      "category": "basic_currency",
+      "status": "implemented_partially_verified",
+      "engine_action": "alteration",
+      "notes": "Same 1/2 mod placeholder as Transmutation."
+    },
+    {
+      "id": "currency.augmentation",
+      "name": "Orb of Augmentation",
+      "category": "basic_currency",
+      "status": "implemented_partially_verified",
+      "engine_action": "augmentation"
+    },
+    {
+      "id": "currency.regal",
+      "name": "Regal Orb",
+      "category": "basic_currency",
+      "status": "implemented_partially_verified",
+      "engine_action": "regal"
+    },
+    {
+      "id": "currency.alchemy",
+      "name": "Orb of Alchemy",
+      "category": "basic_currency",
+      "status": "implemented_partially_verified",
+      "engine_action": "alchemy",
+      "notes": "Mod count 4/5/6 = 8:3:1 (community-measured)."
+    },
+    {
+      "id": "currency.chaos",
+      "name": "Chaos Orb",
+      "category": "basic_currency",
+      "status": "implemented_partially_verified",
+      "engine_action": "chaos",
+      "notes": "Mod count 4/5/6 = 8:3:1 (community-measured). Interaction with prefix/suffix lock modelled as: locked side kept, total count drawn from the same distribution."
+    },
+    {
+      "id": "currency.exalted",
+      "name": "Exalted Orb",
+      "category": "basic_currency",
+      "status": "implemented_partially_verified",
+      "engine_action": "exalted"
+    },
+    {
+      "id": "currency.annulment",
+      "name": "Orb of Annulment",
+      "category": "basic_currency",
+      "status": "implemented_partially_verified",
+      "engine_action": "annulment",
+      "notes": "Uniform over removable explicit mods; fractured and metamod-locked mods are protected."
+    },
+    {
+      "id": "currency.scouring",
+      "name": "Orb of Scouring",
+      "category": "basic_currency",
+      "status": "implemented_partially_verified",
+      "engine_action": "scouring",
+      "notes": "Rarity after scouring an item that keeps fractured mods is UNVERIFIED (engine keeps rarity)."
+    },
+    {
+      "id": "currency.divine",
+      "name": "Divine Orb",
+      "category": "basic_currency",
+      "status": "implemented_partially_verified",
+      "engine_action": "divine",
+      "notes": "Rerolls explicit values uniformly within each stat range; fractured values kept."
+    },
+    {
+      "id": "currency.blessed",
+      "name": "Blessed Orb",
+      "category": "basic_currency",
+      "status": "discovered_not_implemented",
+      "notes": "Implicit values are not modelled yet."
+    },
+    {
+      "id": "currency.chance",
+      "name": "Orb of Chance",
+      "category": "basic_currency",
+      "status": "discovered_not_implemented",
+      "notes": "3.30: much higher unique chance, much rarer, no longer sold by vendors; bench options that cost Chance now cost Alteration (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26))."
+    },
+    {
+      "id": "currency.vaal",
+      "name": "Vaal Orb / corruption",
+      "category": "corruption",
+      "status": "discovered_not_implemented",
+      "notes": "Corrupted items are rejected by every action (correct), but corruption outcomes are not modelled."
+    },
+    {
+      "id": "corruption.double",
+      "name": "Double corruption (Vaal temple / Altar)",
+      "category": "corruption",
+      "status": "discovered_not_implemented",
+      "notes": "3.30: Altar of Corruption and Lapidary Lens corrupt an equipment item or gem a second time ('Twice Corrupted'); the Lens can destroy the item; the Altar's corrupted-influence outcome now destroys the item (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). Outcome odds not published."
+    },
+    {
+      "id": "essence.standard",
+      "name": "Essences (Whispering to Deafening)",
+      "category": "essence",
+      "status": "implemented_partially_verified",
+      "engine_action": "essence",
+      "notes": "Forced mod + rare reforge from game data. 3.30: new Essence of Trickery; Weeping/Wailing essences no longer spawn on monsters in yellow/red maps (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). 'Shrieking/Deafening can reforge rares' still to be confirmed in game."
+    },
+    {
+      "id": "essence.corruption_only",
+      "name": "Corruption-only essences (Hysteria, Insanity, Horror, Delirium, ...)",
+      "category": "essence",
+      "status": "implemented_partially_verified",
+      "engine_action": "essence"
+    },
+    {
+      "id": "essence.remnant_of_corruption",
+      "name": "Remnant of Corruption",
+      "category": "essence",
+      "status": "discovered_not_implemented"
+    },
+    {
+      "id": "fossil.resonator",
+      "name": "Fossils + Resonators",
+      "category": "fossil",
+      "status": "experimental",
+      "engine_action": "fossil",
+      "notes": "Weight multipliers by mod tag. Not yet modelled: added/forced mods (Glyphic, Tangled...), mirrored, sockets, quality, corrupted essence chance, 'lucky' rolls."
+    },
+    {
+      "id": "bench.add_mod",
+      "name": "Crafting bench: add modifier",
+      "category": "bench",
+      "status": "implemented_partially_verified",
+      "engine_action": "bench_craft",
+      "notes": "Validated against bench options present in the imported game data."
+    },
+    {
+      "id": "bench.remove_crafted",
+      "name": "Crafting bench: remove crafted modifiers",
+      "category": "bench",
+      "status": "implemented_partially_verified",
+      "engine_action": "remove_crafted"
+    },
+    {
+      "id": "bench.sockets",
+      "name": "Bench sockets/links/colours",
+      "category": "bench",
+      "status": "discovered_not_implemented"
+    },
+    {
+      "id": "metamod.multimod",
+      "name": "Can have up to 3 Crafted Modifiers",
+      "category": "metamod",
+      "status": "implemented_partially_verified",
+      "notes": "Cost 2 Divine (3.30 game data)."
+    },
+    {
+      "id": "metamod.cannot_roll_attack",
+      "name": "Cannot roll Attack Modifiers",
+      "category": "metamod",
+      "status": "implemented_partially_verified",
+      "notes": "Blocks mods carrying the 'attack' tag. 3.30: no longer stops Annulment-type removal of attack mods (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)); the engine never protected them, so it already matches. Cost 1 Divine (game data)."
+    },
+    {
+      "id": "metamod.cannot_roll_caster",
+      "name": "Cannot roll Caster Modifiers",
+      "category": "metamod",
+      "status": "implemented_partially_verified",
+      "notes": "Blocks mods carrying the 'caster' tag. 3.30: no longer stops Annulment-type removal of caster mods (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)); engine already matches. Cost 1 Divine (game data)."
+    },
+    {
+      "id": "metamod.prefix_suffix_lock",
+      "name": "Prefix/Suffix Modifiers cannot be changed",
+      "category": "metamod",
+      "status": "implemented_partially_verified",
+      "notes": "3.30: crafting-bench options in the game data (StrMaster/DexMaster...CannotChangePrefixes/Suffixes). Cost by item type: weapons 4 Divine + 1 Sacred, armour/quivers 4 Divine + 4 Blessed, jewellery 4 Divine + 8 Exalted; recipe drops in Nightmare Maps. Effect modelled; costs match patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26) and data."
+    },
+    {
+      "id": "metamod.partial_lock",
+      "name": "1 / 2 Prefix (Suffix) Modifier(s) cannot be changed",
+      "category": "metamod",
+      "status": "discovered_not_implemented",
+      "notes": "NEW bench crafts in 3.30: '1 Prefix/Suffix Modifier cannot be changed' (1 Divine), '2 ... cannot be changed' (2 Divine); present in the game data with these costs (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). Engine still refuses such items. Open question: which mod(s) a partial lock protects (chosen? random?) must be sourced before implementing."
+    },
+    {
+      "id": "harvest.reforge",
+      "name": "Harvest (Horticrafting) crafts",
+      "category": "harvest",
+      "status": "discovered_not_implemented",
+      "notes": "3.30: Harvest is Sacred Flora inside maps (no subarea); lifeforce Wild/Vivid/Primal (+Sacred, + Crystallised Rancour for some). Crafts (poedb.tw/us/Horticrafting (73 crafts, read 2026-11-26)): 16 tag reforges (e.g. Life 75 Wild, Fire 50 Wild, Speed 150 Vivid, Critical 150 Primal; Minion/Elemental/Attribute/Mana/Drop cost 200 + Rancour), more/less likely same mod types (200 Wild), influence reforges, 11 add-tagged-mod-and-remove-random-mod crafts (15000-20000 + 1 Sacred), 6 resistance swaps (300+300, matches patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)), 6 damage swaps (+1 Rancour), 14 enchants. NOT available: keep prefixes/suffixes, lucky values, standalone augment/remove. Not in the RePoE export: craft list must be stored manually from this source."
+    },
+    {
+      "id": "bestiary.aspect",
+      "name": "Bestiary / beastcrafting",
+      "category": "bestiary",
+      "status": "discovered_not_implemented",
+      "notes": "3.30: yellow beasts no longer needed or captured; flask-mod recipes need a red beast (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). Equipment recipes (poedb.tw/us/Bestiary_Recipe (78 recipes, read 2026-11-26; page states no patch version)): add suffix + remove random prefix (Farric Lynx Alpha) and the reverse (Farric Wolf Alpha), rare only; add a crafted meta-modifier to a non-unique item (Wild Bristle Matron); imprint of a magic item (Craicic Croaker); add a mod to Shaper/Elder/conqueror items; max links/sockets; aspects; flask suffixes. Version of the recipe list unconfirmed."
+    },
+    {
+      "id": "fracturing",
+      "name": "Fracturing Orb",
+      "category": "fracture",
+      "status": "discovered_not_implemented",
+      "notes": "Fractured mods ARE modelled (protected) when present on a parsed item. 3.30: Tier-5 magic drops can be fractured; fractured drops removed from many sources (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). Fracturing Orb not mentioned in the notes; not implemented."
+    },
+    {
+      "id": "recombinator",
+      "name": "Recombinators",
+      "category": "recombinator",
+      "status": "discovered_not_implemented",
+      "notes": "Exists in 3.30 (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)): result takes the item level of the selected input base; cannot be used on corrupted items; with 1-3 total prefixes or suffixes the result gets fewer on average; mods illegal on the new base are ignored. Exact outcome probabilities are not published."
+    },
+    {
+      "id": "synthesis",
+      "name": "Synthesised items / implicits",
+      "category": "synthesis",
+      "status": "discovered_not_implemented"
+    },
+    {
+      "id": "influence.add",
+      "name": "Conqueror exalts / Awakener's Orb / Orb of Dominance / Maven's Orb",
+      "category": "influence",
+      "status": "discovered_not_implemented",
+      "notes": "Influence tags already widen the mod pool correctly; the currencies that add influence are not modelled."
+    },
+    {
+      "id": "eldritch.implicits",
+      "name": "Eldritch implicits, Ichors, Embers, Eldritch Chaos/Exalt/Annul",
+      "category": "eldritch",
+      "status": "discovered_not_implemented",
+      "notes": "Searing Exarch / Eater of Worlds implicit mods are in the 3.30 game data (generation types searing_exarch_implicit / eater_of_worlds_implicit). 3.30 notes change only altar drop rewards (Threads), not the crafting itself."
+    },
+    {
+      "id": "veiled.unveil",
+      "name": "Veiled mods and unveiling",
+      "category": "veiled",
+      "status": "discovered_not_implemented",
+      "notes": "3.30: Veiled Chaos/Exalted Orbs moved to the League currency section; veiled items no longer come from non-Betrayal content (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). A third-party guide reports that since 3.30.0b hotfix 4 Veiled Chaos Orbs work on items with a veiled mod (unverified). Unveil mods exist in the game data (domain 'unveiled'). Aisling (Betrayal) not mentioned in the 3.30 notes."
+    },
+    {
+      "id": "catalysts",
+      "name": "Catalysts / quality",
+      "category": "quality",
+      "status": "discovered_not_implemented"
+    },
+    {
+      "id": "anointments",
+      "name": "Anointments",
+      "category": "other",
+      "status": "discovered_not_implemented"
+    },
+    {
+      "id": "enchantments",
+      "name": "Enchantments (lab, Heist, Harvest)",
+      "category": "other",
+      "status": "discovered_not_implemented"
+    },
+    {
+      "id": "cluster_jewels",
+      "name": "Cluster jewel crafting",
+      "category": "jewel",
+      "status": "discovered_not_implemented",
+      "notes": "Cluster mods depend on enchant + passive count, not modelled yet."
+    },
+    {
+      "id": "jewels.regular",
+      "name": "Regular / abyss jewel crafting",
+      "category": "jewel",
+      "status": "implemented_partially_verified",
+      "notes": "Pool and 2+2 affix limit modelled; rare jewel mod count is a placeholder."
+    },
+    {
+      "id": "flasks",
+      "name": "Flask crafting (magic)",
+      "category": "flask",
+      "status": "implemented_partially_verified",
+      "notes": "Transmute/alt/aug pool modelled. Flask enchantments (Enkindling/Instilling), tinctures not modelled."
+    },
+    {
+      "id": "maps",
+      "name": "Map crafting",
+      "category": "map",
+      "status": "unsupported",
+      "notes": "Out of scope until item crafting is solid."
+    },
+    {
+      "id": "gems",
+      "name": "Gem quality / corruption",
+      "category": "gem",
+      "status": "unsupported"
+    },
+    {
+      "id": "league.3_30",
+      "name": "3.30 Covens of Umbra: Gwennen coin-flip crafting",
+      "category": "league",
+      "status": "unknown",
+      "notes": "Gwennen offers three sets of two crafting options for a rare item; a coin flip applies one option of the chosen set; paid with Broken Circle Artifacts (one Astragali per item) (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). No option list, odds or costs published (poedb has no page for it as of 2026-11-26). Cannot be modelled until data exists."
+    },
+    {
+      "id": "removed.scarabs",
+      "name": "Scarabs (replaced by Threads in 3.30)",
+      "category": "atlas",
+      "status": "removed",
+      "notes": "Not a crafting mechanic; listed so old strategies relying on scarab-driven farming are flagged."
+    }
+  ],
+  "sources_3_30": [
+    "patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)",
+    "poedb.tw/us/Horticrafting (73 crafts, read 2026-11-26)",
+    "poedb.tw/us/Bestiary_Recipe (78 recipes, read 2026-11-26; page states no patch version)",
+    "3.30 game data (RePoE 3.30.0.4.3): crafting_bench_options.json, mods.json"
   ]
 }

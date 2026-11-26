@@ -89,3 +89,17 @@ def test_mod_pools_match_craft_of_exile(real_gd):
             assert set(theirs) == set(ours), (base, ilvl)
             bad = [k for k in theirs if abs(theirs[k] - ours[k]) > 0.5 and (base, k) not in known]
             assert not bad, (base, ilvl, bad)
+
+
+def test_lock_meta_crafts_cost_what_the_3_30_patch_notes_say(real_gd):
+    """Patch notes 3.30.0 (see docs/MECHANICS_3_30.md) vs the bench data."""
+    cost = {}
+    for o in real_gd.bench_options:
+        mid = (o.get("actions") or {}).get("add_explicit_mod") or ""
+        if "CannotChange" in mid:
+            cost[mid] = {real_gd.bases[k].name: v for k, v in (o.get("cost") or {}).items()}
+    assert cost["StrMasterItemGenerationCannotChangeOnePrefixes"] == {"Divine Orb": 1}
+    assert cost["DexMasterItemGenerationCannotChangeTwoSuffixes"] == {"Divine Orb": 2}
+    assert cost["StrMasterItemGenerationCannotChangePrefixes"] == {"Divine Orb": 4, "Sacred Orb": 1}
+    assert cost["DexMasterItemGenerationCannotChangeSuffixesB"] == {"Divine Orb": 4, "Blessed Orb": 4}
+    assert cost["StrMasterItemGenerationCannotChangePrefixesC"] == {"Divine Orb": 4, "Exalted Orb": 8}

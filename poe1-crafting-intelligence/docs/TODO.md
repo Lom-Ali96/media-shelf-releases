@@ -2,9 +2,12 @@
 
 The ordered backlog is in ROADMAP.md. Open questions:
 
-- [ ] What 3.30 crafting changes are there? (read the full 3.30.0–3.30.0c notes)
-- [ ] Are recombinators available in 3.30?
-- [ ] Where do the prefix/suffix lock metamods come from in 3.30?
+- [x] What 3.30 crafting changes are there? Read the full 3.30.0 notes (2026-11-26): see MECHANICS_3_30.md. Still to read: 3.30.0a–d hotfix notes (poewiki blocks automated reading).
+- [x] Are recombinators available in 3.30? Yes, with changed rules (MECHANICS_3_30.md).
+- [x] Where do the prefix/suffix lock metamods come from in 3.30? Crafting bench (recipe from Nightmare Maps); partial locks are new bench crafts.
+- [ ] Which mod does a partial lock ('1 Prefix Modifier cannot be changed') protect: chosen or random?
+- [ ] How strongly does Harvest 'more/less likely to get the same modifier types' change the weights?
+- [ ] Gwennen coin-flip crafting (3.30 league): option list, odds and costs are not published yet.
 - [ ] Source the Transmutation/Alteration 1-vs-2 mod split.
 - [ ] Source the rare jewel 3-vs-4 mod split.
 - [ ] Rarity after Scouring an item that keeps fractured mods.
