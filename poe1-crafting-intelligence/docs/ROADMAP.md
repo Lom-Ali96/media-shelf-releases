@@ -37,7 +37,7 @@
 
 ## Prioritised backlog (next up first)
 
-1. **P0:** Reference-case suite vs Craft of Exile for ring, body armour and jewel (chaos, alt/aug/regal, exalt, essence). Promote statuses.
+1. **P0:** Reference-case suite vs Craft of Exile for ring, body armour and jewel (chaos, alt/aug/regal, exalt, essence). Promote statuses. *Mod pools done 2026-11-26 (`pool.spawn_weights` verified, 29/30 identical); still to do: currency outcomes, essences, fossils, influence pools.*
 2. **P0:** Read the full 3.30.0 to 3.30.0c patch notes; update the registry (league crafting, recombinators, Harvest availability, lock metamods).
 3. **P0:** Resolve placeholder assumptions (magic 1/2 mod split, rare jewel 3/4 split) with sourced data.
 4. **P1:** ~~Verify the poe.ninja adapter live~~ (done 2026-11-26); add a league picker sourced from `/poe1/api/data/index-state`; add divine/chaos toggle.
@@ -53,6 +53,7 @@
 - ✅ **Route planner, stage A:** paste an item or choose wanted mods with a worst acceptable tier → standard methods ranked by expected cost, with steps (`engine/planner.py`). Next: more templates (fossils once verified, essence + exalt combos, multimod finishes), then the real pathfinder (P2 above).
 - ✅ **ROI:** trade-site search link with wanted mods pre-filled (opened by the user), manual sale price, profit/ROI per route, ROI board of saved crafts sorted by profit. Next: refresh saved costs on demand; show a bad-luck (90%) cost next to the expected cost.
 - ✅ **Import gear from Path of Building codes** (covers poe.ninja character pages, which offer a PoB export). Screenshots are not planned: they don't show tiers and text recognition misreads numbers.
+- ✅ Craft Ideas: starter targets planned in one click, sale price + profit per idea, saved to the ROI board (2026-11-26).
 - ✅ Fossil routes (experimental), eDPS minimum in trade links, bench crafts and "find similar" in the Item Analyzer, mod-pool cache, stress test (2026-11-26).
 
 ## Complexity estimate

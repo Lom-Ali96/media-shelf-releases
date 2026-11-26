@@ -17,6 +17,7 @@ Run all tests:
 | `test_planner.py` | Route planner: Wald cost, bench finish, essence/fossil selection (blocking fossils never offered), impossible targets give a minimum, bad input, API |
 | `test_trade_roi.py` | Trade link building (worst-tier minimums, "reduced" sign, eDPS filter), stat-list cache per game version, ROI board, analyzer bench list and "find similar" |
 | `test_pob.py` | Path of Building codes: decoding, `{range}`/`{crafted}`/implicits, active item set, assumed item level, refused inputs (links, garbage, broken XML, decompression bomb) |
+| `test_realdata.py::test_mod_pools_match_craft_of_exile` | The 30 Craft of Exile reference cases (skipped until `data/craftofexile_poec_data.json` exists) |
 | `test_web.py` | The page's JavaScript has no syntax error (`node --check`; skipped without Node.js). Regression for the broken-tabs bug |
 | `test_storage.py` | The shared database connection under 16 threads (regression for the stress-test crash) |
 
@@ -32,4 +33,10 @@ Run all tests:
 
 **Promotion rule:** a mechanic moves to `implemented_verified` only after at least 3 reference cases agree with an independent source (Craft of Exile or a logged in-game test) within the Monte Carlo confidence interval. Those cases are then added as tests.
 
-M1 result: **31 passed** (including the real-data tests). Now: **53 passed**.
+M1 result: **31 passed** (including the real-data tests). Now: **56 passed**.
+
+### Cross-check with Craft of Exile
+
+`scripts\compare_craftofexile.py [item level]` downloads Craft of Exile's public data file once (`data/craftofexile_poec_data.json`, ~9 MB) and compares, for 10 bases, every rollable tier (affix, mod group, required item level, weight) with ours. Both sides read weights from the game's `mods.dat`, so this checks how the app applies them (pool rules, item-level gates, generation multipliers, exclusions), not the raw numbers.
+
+2026-11-26 result: 29 of 30 cases identical. Imbued Wand, item level ≥ 50: local mana leech CoE 1000 vs ours 500. Our 500 = spawn weight 1000 × the data's 50% generation weight for `wand_can_roll_caster_modifiers`; CoE applies that 50% to the matching life-leech mod (both 500) but not to mana leech, so we keep ours. CoE also rounds 12.5 to 12 (negligible).

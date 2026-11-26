@@ -58,3 +58,34 @@ Item Level: 84
 """
     item = ItemParser(real_gd).parse(text)
     assert [m.mod_id for m in item.mods] == ["IncreasedLife7", "FireResist7"]
+
+
+def test_every_craft_idea_fits_the_game_data(real_gd, conn):
+    from fastapi.testclient import TestClient
+
+    from poeci.api.app import create_app
+
+    ideas = TestClient(create_app(real_gd, conn)).get("/api/ideas").json()
+    assert ideas and [i["name"] for i in ideas if i["problem"]] == []
+
+
+def test_mod_pools_match_craft_of_exile(real_gd):
+    """Reference cases behind pool.spawn_weights = implemented_verified (see mechanics_registry.json)."""
+    import importlib.util
+    from pathlib import Path
+
+    script = Path(__file__).parents[2] / "scripts" / "compare_craftofexile.py"
+    spec = importlib.util.spec_from_file_location("compare_coe", script)
+    coe = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(coe)
+    if not coe.CACHE.exists():
+        pytest.skip("Craft of Exile data not downloaded (run scripts/compare_craftofexile.py once)")
+    d = coe.load_coe()
+    known = {("Imbued Wand", ("suffix", "ManaLeech", 50))}  # explained in the registry notes
+    for ilvl in (30, 68, 86):
+        for base in coe.BASES:
+            theirs, _ = coe.coe_tiers(d, base, ilvl)
+            ours, _ = coe.our_tiers(real_gd, base, ilvl)
+            assert set(theirs) == set(ours), (base, ilvl)
+            bad = [k for k in theirs if abs(theirs[k] - ours[k]) > 0.5 and (base, k) not in known]
+            assert not bad, (base, ilvl, bad)

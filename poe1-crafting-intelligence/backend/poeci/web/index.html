@@ -56,6 +56,7 @@
     <button data-s="pool">Mod Pool</button>
     <button data-s="analyzer">Item Analyzer</button>
     <button data-s="plan">Route Planner</button>
+    <button data-s="ideas">Craft Ideas</button>
     <button data-s="sim">Simulator</button>
     <button data-s="coverage">Coverage</button>
     <button data-s="settings">Settings</button>
@@ -126,6 +127,15 @@
     </div>
     <div class="card"><h2>Routes (cheapest first)</h2><div id="planOut" class="small muted">No plan yet.</div></div>
     <div class="card"><h2>Your crafts by profit (ROI board)</h2><div id="roiOut" class="small muted">Nothing saved yet.</div></div>
+  </section>
+
+  <section id="ideas">
+    <div class="card">
+      <h2>Craft ideas: what is worth crafting?</h2>
+      <div class="small muted">A starter list of common craft targets (edit <code>backend/poeci/knowledge/craft_ideas.json</code> to change it). The app plans the cheapest route for each one. You check what the finished item sells for with the trade link, type the price, and the profit appears. Saved ideas go to the ROI board in the Route Planner.</div>
+      <div class="row" style="margin-top:8px"><button class="primary" id="ideasGo">Plan all ideas</button><span id="ideasStatus" class="small muted"></span></div>
+      <div class="scroll"><table id="ideasTable"></table></div>
+    </div>
   </section>
 
   <section id="sim">
@@ -326,6 +336,57 @@ async function loadRoi() {
     });
   } catch (e) { $("roiOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
 }
+// Craft ideas: plan every idea with a short time budget, then let the user add sale prices.
+$("ideasGo").onclick = async () => {
+  const btn = $("ideasGo");
+  btn.disabled = true;
+  try {
+    const ideas = await api("/api/ideas");
+    const rows = ideas.map((idea, i) => `<tr data-idea="${i}"><td><b>${esc(idea.name)}</b><br><span class="muted">${esc(idea.base)}, ilvl ${idea.item_level}</span></td>
+      <td class="small" data-f="wants">${idea.problem ? `<span class="bad">${esc(idea.problem)}</span>` : '<span class="muted">waiting…</span>'}</td>
+      <td data-f="route"></td><td class="num" data-f="cost"></td>
+      <td data-f="sale"></td><td class="num" data-f="profit"></td><td data-f="actions"></td></tr>`).join("");
+    $("ideasTable").innerHTML = `<tr><th>Idea</th><th>Wanted mods</th><th>Cheapest route</th><th class="num">Cost</th><th>Sale price (chaos)</th><th class="num">Profit</th><th></th></tr>` + rows;
+    for (const [i, idea] of ideas.entries()) {
+      if (idea.problem) continue;
+      $("ideasStatus").textContent = ` Planning ${i + 1} of ${ideas.length}: ${idea.name}…`;
+      const row = document.querySelector(`#ideasTable [data-idea="${i}"]`);
+      const cell = (f) => row.querySelector(`[data-f="${f}"]`);
+      const body = {base: idea.base, item_level: idea.item_level, influences: idea.influences || [],
+        wants: idea.wants.map(w => ({mod_type: w.mod_type, max_tier: w.max_tier ?? 99, bench: !!w.bench}))};
+      try {
+        const r = await api("/api/plan", {method: "POST", body: JSON.stringify({...body, budget_s: 0.6})});
+        divineChaos = r.divine_chaos;
+        const best = r.routes.find(x => x.expected_chaos != null);
+        cell("wants").innerHTML = r.wants_text.map(w => esc(w.text.split("\n").join(" / ")) + (w.bench ? " <span class='crafted'>(bench)</span>" : "")).join("<br>");
+        cell("route").innerHTML = best ? esc(best.name) : '<span class="bad">no realistic route found</span>';
+        cell("cost").innerHTML = best ? money(best.expected_chaos) : (r.routes[0] && r.routes[0].at_least_chaos != null ? `> ${money(r.routes[0].at_least_chaos)}` : "–");
+        cell("sale").innerHTML = `<input type="number" min="0" step="1" style="width:90px" value="${r.saved_sale_chaos ?? ""}">`;
+        cell("actions").innerHTML = (r.trade_url ? '<button data-a="trade">Check price ↗</button> ' : "") + '<button data-a="save">Save</button> <button data-a="open">Open</button>';
+        const input = cell("sale").querySelector("input");
+        const showIdeaProfit = () => {
+          const sale = +input.value, cost = best ? best.expected_chaos : null;
+          cell("profit").innerHTML = sale && cost != null ? `<span class="${sale - cost >= 0 ? "good" : "bad"}">${num(sale - cost, 0)} c</span>` : "";
+        };
+        input.oninput = showIdeaProfit; showIdeaProfit();
+        row.querySelector('[data-a="save"]').onclick = async (ev) => {
+          if (!+input.value) { input.focus(); return; }
+          await api("/api/plans", {method: "POST", body: JSON.stringify({...body, sale_chaos: +input.value,
+            best_route: best ? best.name : null, best_cost_chaos: best ? best.expected_chaos : null})});
+          ev.target.textContent = "Saved ✓"; loadRoi();
+        };
+        if (r.trade_url) row.querySelector('[data-a="trade"]').onclick = () => window.open(r.trade_url, "_blank", "noopener");
+        row.querySelector('[data-a="open"]').onclick = () => {
+          $("planBase").value = idea.base; $("planIlvl").value = idea.item_level; $("planInfl").value = (idea.influences || []).join(", ");
+          planWants = body.wants.map((w, k) => ({...w, text: r.wants_text[k].text, on: true})); renderWants(); showTab("plan"); $("planGo").click();
+        };
+      } catch (e) { cell("route").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+    }
+    $("ideasStatus").textContent = " Done. Quick estimates (0.6 s per route): click Open for a more precise plan.";
+  } catch (e) { $("ideasStatus").innerHTML = ` <span class="bad">${esc(e.message)}</span>`; }
+  btn.disabled = false;
+};
+
 // Plain text in Reddit markdown, so the user can ask others whether the route is optimal.
 function shareText(r, i) {
   const rt = r.routes[i];

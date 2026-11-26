@@ -15,7 +15,9 @@
 - `scripts/stress_test.py`.
 - Route Planner: *Copy for Reddit* button per route (markdown with readable target mods, steps, cost, alternatives and data sources). Plan response now includes readable wanted-mod texts (`worst_accepted_mods`, shared with the trade links).
 - Fix: a broken regular expression in the page script (bench-craft list) stopped every tab from working; `test_web.py` now checks the page script with `node --check`.
-- 53 automated tests.
+- Craft Ideas tab: `knowledge/craft_ideas.json` (11 starter targets, validated against the game data), `GET /api/ideas`, `budget_s` option on `POST /api/plan` (0.2–3 s per route).
+- Verification: `scripts/compare_craftofexile.py` compares our mod pools with Craft of Exile's data tier by tier. 10 bases × item level 30/68/86: 29/30 identical; the wand mana-leech difference is explained (our value follows the game file's generation weight). New registry entry `pool.spawn_weights` = implemented_verified (first verified mechanic); reference test added.
+- 56 automated tests.
 
 ## 0.1.0 (2026-11-26): Milestone 1
 

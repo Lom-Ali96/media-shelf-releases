@@ -3,6 +3,7 @@
   "verified_for_patch": "3.30",
   "last_reviewed": "2026-11-26",
   "mechanics": [
+    {"id": "pool.spawn_weights", "name": "Mod pools and spawn weights (which mods can roll, tiers, item-level gates, weights)", "category": "core", "status": "implemented_verified", "engine_action": null, "notes": "Cross-checked 2026-11-26 against Craft of Exile's data (scripts/compare_craftofexile.py): 10 bases x item level 30/68/86 = 30 reference cases; 29 identical tier by tier (presence, required level, weight). Only difference: wand local mana leech (CoE 1000, ours 500 = spawn 1000 x the data's 50% wand generation weight, which CoE applies to the matching life-leech mod but not to mana leech). CoE also rounds 12.5 weights down to 12 (<0.01% effect). Influence pools not yet cross-checked."},
     {"id": "currency.transmutation", "name": "Orb of Transmutation", "category": "basic_currency", "status": "implemented_partially_verified", "engine_action": "transmutation", "notes": "1 vs 2 mod split is a placeholder assumption (assumptions.json: magic_mod_count)."},
     {"id": "currency.alteration", "name": "Orb of Alteration", "category": "basic_currency", "status": "implemented_partially_verified", "engine_action": "alteration", "notes": "Same 1/2 mod placeholder as Transmutation."},
     {"id": "currency.augmentation", "name": "Orb of Augmentation", "category": "basic_currency", "status": "implemented_partially_verified", "engine_action": "augmentation"},

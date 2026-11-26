@@ -55,3 +55,12 @@ def test_plan_api(gd, conn):
     body = r.json()
     assert body["routes"] and body["routes"][0]["successes"] > 0
     assert c.post("/api/plan", json={"base": "Nope", "wants": [{"mod_type": "X"}]}).status_code == 404
+
+
+def test_ideas_flag_problems_and_plan_budget_is_bounded(gd, conn):
+    c = TestClient(create_app(gd, conn))
+    ideas = c.get("/api/ideas").json()
+    assert ideas and all(i["problem"] for i in ideas)  # the mini test data has none of these bases
+    body = {"base": "Test Ring", "item_level": 84, "wants": [{"mod_type": "FireResistance"}]}
+    assert c.post("/api/plan", json={**body, "budget_s": 60}).status_code == 422
+    assert c.post("/api/plan", json={**body, "budget_s": 0.2}).status_code == 200

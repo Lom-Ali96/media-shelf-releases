@@ -26,6 +26,7 @@ from ..storage import db
 from ..updates import versions
 
 WEB = Path(__file__).parents[1] / "web" / "index.html"
+IDEAS = Path(__file__).parents[1] / "knowledge" / "craft_ideas.json"
 
 
 class SettingsIn(BaseModel):
@@ -65,6 +66,7 @@ class PlanIn(BaseModel):
     influences: list[str] = Field(default_factory=list)
     wants: list[WantIn]
     seed: int = 1
+    budget_s: float = Field(2.0, ge=0.2, le=3.0)  # simulation seconds per route
 
 class SavePlanIn(PlanIn):
     sale_chaos: float = Field(gt=0)
@@ -276,7 +278,7 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
         wants = [Want(w.mod_type, w.max_tier, w.bench) for w in body.wants]
         infl = frozenset(i.lower() for i in body.influences)
         try:
-            routes = plan_routes(g, b.id, body.item_level, wants, influences=infl, seed=body.seed)
+            routes = plan_routes(g, b.id, body.item_level, wants, influences=infl, seed=body.seed, budget_s=body.budget_s)
         except (InvalidAction, UnsupportedMechanic) as e:
             raise HTTPException(422, str(e))
         lg = league()
@@ -323,6 +325,21 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
                 "prices_as_of": versions.status(st.conn, g.version).get("latest_market_update"),
                 "trade_url": trade_url, "trade_notes": trade_notes, "saved_sale_chaos": saved["sale_chaos"] if saved else None,
                 "rules_verified_for_current_data": versions.status(st.conn, g.version)["rules_verified_for_current_data"]}
+
+    @app.get("/api/ideas")
+    def ideas():
+        """Starter craft targets (knowledge/craft_ideas.json), each checked against the game data."""
+        g = gd()
+        out = []
+        for idea in json.loads(IDEAS.read_text(encoding="utf-8"))["ideas"]:
+            b = g.bases_by_name.get(idea["base"])
+            problem = None if b else f"unknown base {idea['base']!r}"
+            if b:
+                rollable = {e.mod.type for e in eligible_pool(g, ItemState(b.id, idea["item_level"], "rare"))}
+                missing = [w["mod_type"] for w in idea["wants"] if not w.get("bench") and w["mod_type"] not in rollable]
+                problem = f"cannot roll on this base: {', '.join(missing)}" if missing else None
+            out.append({**idea, "problem": problem})
+        return out
 
     @app.post("/api/plans")
     def save_plan(body: SavePlanIn):

@@ -1,6 +1,7 @@
 # Known limitations (milestone 1)
 
-- No mechanic is "verified" yet; there has been no external cross-check (see TESTING.md).
+- Only the mod pools are verified (against Craft of Exile, 2026-11-26). Currency behaviour (e.g. how many mods a Chaos Orb rolls), essences, fossils and influence pools are not yet cross-checked (see TESTING.md).
+- Craft Ideas is a starter list, not a profit claim; its quick plans use 0.6 s per route (rougher numbers).
 - `magic_mod_count` (Transmutation/Alteration 1 vs 2 mods) and `rare_jewel_mod_count` are placeholder 50/50 assumptions.
 - Fossils are experimental: forced or added mods, special fossils, sockets and quality are not modelled.
 - Not modelled at all: Harvest, Bestiary, fracturing currency, influence-adding currencies, Eldritch, veiled mods, recombinators, corruption outcomes, cluster jewels, catalysts, enchantments, sockets.

@@ -1,0 +1,27 @@
+{
+  "_note": "Starter list of common PoE1 craft targets for the Craft ideas screen. Not a claim that these are profitable: the app plans each one and you check the sale price. Edit freely: mod_type names are shown in Mod Pool / Item Analyzer; max_tier = worst tier you accept; bench = finish that mod on the crafting bench.",
+  "ideas": [
+    {"name": "Life + 2 resistances ring", "base": "Two-Stone Ring", "item_level": 84,
+     "wants": [{"mod_type": "IncreasedLife", "max_tier": 3}, {"mod_type": "FireResistance", "max_tier": 2}, {"mod_type": "ColdResistance", "max_tier": 2}]},
+    {"name": "Life + crit multiplier amulet", "base": "Onyx Amulet", "item_level": 84,
+     "wants": [{"mod_type": "IncreasedLife", "max_tier": 3}, {"mod_type": "CriticalStrikeMultiplier", "max_tier": 3}]},
+    {"name": "+1 to all skill gems amulet", "base": "Onyx Amulet", "item_level": 84,
+     "wants": [{"mod_type": "GlobalSkillGemLevel"}, {"mod_type": "IncreasedLife", "max_tier": 4}]},
+    {"name": "Movement speed boots", "base": "Two-Toned Boots", "item_level": 86,
+     "wants": [{"mod_type": "MovementVelocity", "max_tier": 2}, {"mod_type": "IncreasedLife", "max_tier": 3}, {"mod_type": "FireResistance", "max_tier": 3}]},
+    {"name": "Life + resistances belt", "base": "Stygian Vise", "item_level": 84,
+     "wants": [{"mod_type": "IncreasedLife", "max_tier": 2}, {"mod_type": "ColdResistance", "max_tier": 2}, {"mod_type": "LightningResistance", "max_tier": 2}]},
+    {"name": "Attack speed gloves", "base": "Spiked Gloves", "item_level": 84,
+     "wants": [{"mod_type": "IncreasedAttackSpeed", "max_tier": 2}, {"mod_type": "IncreasedLife", "max_tier": 3}]},
+    {"name": "Energy shield helmet", "base": "Hubris Circlet", "item_level": 86,
+     "wants": [{"mod_type": "LocalEnergyShieldPercent", "max_tier": 2}, {"mod_type": "LocalEnergyShield", "max_tier": 2}]},
+    {"name": "Energy shield body armour", "base": "Vaal Regalia", "item_level": 86,
+     "wants": [{"mod_type": "LocalEnergyShieldPercent", "max_tier": 2}, {"mod_type": "LocalEnergyShield", "max_tier": 2}]},
+    {"name": "Elemental bow", "base": "Spine Bow", "item_level": 85,
+     "wants": [{"mod_type": "LocalLightningDamageTwoHand", "max_tier": 3}, {"mod_type": "CriticalStrikeMultiplier", "max_tier": 2}, {"mod_type": "LocalColdDamageTwoHand", "bench": true}]},
+    {"name": "Spell damage wand", "base": "Imbued Wand", "item_level": 84,
+     "wants": [{"mod_type": "WeaponSpellDamage", "max_tier": 2}, {"mod_type": "IncreasedCastSpeed", "max_tier": 3}]},
+    {"name": "Life + crit multiplier jewel", "base": "Cobalt Jewel", "item_level": 84,
+     "wants": [{"mod_type": "PercentIncreasedLifeForJewel"}, {"mod_type": "CritMultiplierForJewel"}]}
+  ]
+}
