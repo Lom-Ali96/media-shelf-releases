@@ -1,13 +1,17 @@
 # API integrations
 
-## poe.ninja (implemented, unverified live)
+## poe.ninja (implemented, verified live 2026-11-26)
 
 `backend/poeci/market/poeninja.py`
 
-- Endpoints: `/api/data/currencyoverview?league=<L>&type=Currency|Fragment` and `/api/data/itemoverview?league=<L>&type=Essence|Fossil|Resonator|Beast|Oil|DeliriumOrb|BaseType|ClusterJewel|Unique*`.
+- The old `/api/data/currencyoverview` and `/api/data/itemoverview` endpoints now return 404.
+- Endpoints (as used by poe.ninja's own site on 2026-11-26):
+  - `/poe1/api/economy/exchange/current/overview?league=<L>&type=Currency|Fragment|Essence|Fossil|Resonator|Oil|DeliriumOrb`;
+  - `/poe1/api/economy/stash/current/item/overview?league=<L>&type=Beast|BaseType|ClusterJewel|Unique*`.
+- League names are poe.ninja's short names, e.g. `Covens` (not "Covens of Umbra"); the list is at `/poe1/api/data/index-state` → `economyLeagues[].name`. An unknown league returns HTTP 200 with empty lists, so an empty result is reported as an error.
 - Fields read:
-  - currency overview: `currencyTypeName`, `chaosEquivalent`, `receive.listing_count`;
-  - item overview: `name`, `chaosValue`, `divineValue`, `listingCount`, `variant`, `levelRequired`.
+  - exchange: `core.primary` (must be `chaos`), `core.rates.divine`, `lines[].id` + `primaryValue`, names from `items[].id` → `name`. No listing count is given (only trade volume), so `listing_count` is empty;
+  - stash item: `name`, `chaosValue`, `divineValue`, `listingCount`, `variant`, `levelRequired`.
 - Politeness:
   - one request at a time (process lock);
   - at most one fetch per (league, category) per `POECI_MARKET_CACHE_SECONDS` (default 900);

@@ -9,4 +9,4 @@ The ordered backlog is in ROADMAP.md. Open questions:
 - [ ] Source the rare jewel 3-vs-4 mod split.
 - [ ] Rarity after Scouring an item that keeps fractured mods.
 - [ ] Do Shrieking/Deafening essences still reforge rares in 3.30? (confirm in game)
-- [ ] Check the poe.ninja response shape live; find the documented leagues endpoint path.
+- [x] Check the poe.ninja response shape live; leagues are at `/poe1/api/data/index-state` (2026-11-26).

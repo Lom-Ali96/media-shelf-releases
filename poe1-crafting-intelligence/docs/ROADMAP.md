@@ -11,7 +11,7 @@
 | 2 Core rules | ItemState, pools, basic currencies, essence, bench, metamods | 🟡 | ✅ pool probabilities sum to 1 on 6 real bases; ✅ sampler passes chi-square vs exact; ⬜ **10+ reference cases cross-checked against Craft of Exile**, after which these mechanics become "verified" |
 | 3 Advanced mechanics | Harvest, Bestiary, fracture, influence currencies, Eldritch, recombinators, corruption, 3.30 league crafting | ⬜ | Each mechanic: registry entry, implementation, reference tests, status ≥ partially verified |
 | 4 Simulator | Conditional recipes, cost distributions, charts, background jobs | 🟡 | ✅ seeded reproducible MC with CI and percentiles; ⬜ multi-step conditional recipes; ⬜ background jobs with cancel; ⬜ charts (React) |
-| 5 Market | poe.ninja, conversion, history, trade links | 🟡 | ✅ adapter, cache, overrides; ⬜ live verification; ⬜ divine conversion in UI; ⬜ trade links; ⬜ freshness badges |
+| 5 Market | poe.ninja, conversion, history, trade links | 🟡 | ✅ adapter, cache, overrides; ✅ live verification (2026-11-26); ⬜ divine conversion in UI; ⬜ trade links; ⬜ freshness badges |
 | 6 Community recipes | Manual import, extraction, validation, library | ⬜ | Recipe JSON schema; manual import of a Reddit or text guide yields steps or *explicitly listed missing info*; validation classifies into the 7 statuses |
 | 7 Pathfinding | MDP over abstract states, strategy templates | ⬜ | For 5 reference targets, it finds a strategy within 10% of the best known community method's expected cost, and labels it optimal or best-found |
 | 8 Item advisor | Live assistant, continuation advice, recovery | ⬜ | Paste → next-best action with EV; re-paste updates the plan; sunk cost ignored |
@@ -40,7 +40,7 @@
 1. **P0:** Reference-case suite vs Craft of Exile for ring, body armour and jewel (chaos, alt/aug/regal, exalt, essence). Promote statuses.
 2. **P0:** Read the full 3.30.0 to 3.30.0c patch notes; update the registry (league crafting, recombinators, Harvest availability, lock metamods).
 3. **P0:** Resolve placeholder assumptions (magic 1/2 mod split, rare jewel 3/4 split) with sourced data.
-4. **P1:** Verify the poe.ninja adapter live; add a league picker sourced from the documented leagues endpoint; add divine/chaos toggle.
+4. **P1:** ~~Verify the poe.ninja adapter live~~ (done 2026-11-26); add a league picker sourced from `/poe1/api/data/index-state`; add divine/chaos toggle.
 5. **P1:** Multi-step recipes (a recipe = ordered steps with repeat-until/if conditions), executed by the simulator.
 6. **P1:** NumPy-vectorised reforge sampler (aiming for 10× speed).
 7. **P1:** Fossils: forced or added mods, Glyphic/Tangled specials; Harvest per 3.30 data.

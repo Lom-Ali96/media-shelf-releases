@@ -46,7 +46,7 @@ The app only listens on your own PC (127.0.0.1). To reach it from another device
 
 ## 5. First steps in the app
 
-1. **Settings → League:** type the league name exactly as poe.ninja shows it, for example `Covens of Umbra`, and click Save.
+1. **Settings → League:** type the league name exactly as poe.ninja shows it, for example `Covens` (poe.ninja's short name, not "Covens of Umbra"), and click Save.
 2. **Settings → Fetch prices:** this loads currency, essence and fossil prices. If it fails, enter prices manually under *Manual price*.
 3. **Mod Pool:** pick a base and see every rollable mod with its exact probability.
 4. **Item Analyzer:** in game, hover an item and press **Ctrl+Alt+C**, then paste it here.

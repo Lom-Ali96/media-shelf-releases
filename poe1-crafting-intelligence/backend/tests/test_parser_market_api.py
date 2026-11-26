@@ -70,17 +70,28 @@ def test_poeninja_parsing_and_cache(conn):
 
     def handler(request: httpx.Request):
         calls.append(str(request.url))
-        if "currencyoverview" in str(request.url):
-            return httpx.Response(200, json={"lines": [{"currencyTypeName": "Divine Orb", "chaosEquivalent": 180.5, "receive": {"listing_count": 900}}]})
-        return httpx.Response(200, json={"lines": [{"name": "Deafening Essence of Greed", "chaosValue": 3.2, "divineValue": 0.02, "listingCount": 40}]})
+        # Shapes as served live by poe.ninja on 2026-11-26.
+        if "/exchange/" in str(request.url):
+            return httpx.Response(200, json={
+                "core": {"primary": "chaos", "rates": {"divine": 0.005}},
+                "lines": [{"id": "divine", "primaryValue": 180.5}, {"id": "no-name", "primaryValue": 1}],
+                "items": [{"id": "divine", "name": "Divine Orb"}]})
+        return httpx.Response(200, json={"lines": [{"name": "Goliath Talisman", "chaosValue": 3.2, "divineValue": 0.02, "listingCount": 40, "variant": "Shaper"}]})
 
     client = poeninja.PoeNinja(conn, httpx.Client(transport=httpx.MockTransport(handler)))
     s1 = client.fetch("Covens of Umbra", "Currency")
     s2 = client.fetch("Covens of Umbra", "Currency")  # cached: no second request
     assert s1 == s2 and len(calls) == 1
-    client.fetch("Covens of Umbra", "Essence")
+    client.fetch("Covens of Umbra", "BaseType")
+    assert "/stash/current/item/" in calls[-1]
     assert poeninja.price_of(conn, "Covens of Umbra", "Divine Orb")["chaos_value"] == 180.5
-    assert poeninja.price_of(conn, "Covens of Umbra", "Deafening Essence of Greed")["is_listing_price"] is True
+    assert poeninja.price_of(conn, "Covens of Umbra", "Goliath Talisman")["is_listing_price"] is True
+    with pytest.raises(poeninja.MarketError):
+        poeninja.parse_overview("Essence", {"lines": [], "core": {"primary": "divine"}})
+    empty = poeninja.PoeNinja(conn, httpx.Client(transport=httpx.MockTransport(
+        lambda r: httpx.Response(200, json={"core": {"primary": "chaos"}, "lines": [], "items": []}))))
+    with pytest.raises(poeninja.MarketError, match="league name"):
+        empty.fetch("Wrong League", "Fossil")
     poeninja.set_override(conn, "Covens of Umbra", "Divine Orb", 200, "my trade")
     assert poeninja.price_of(conn, "Covens of Umbra", "Divine Orb")["source"] == "manual override"
     with pytest.raises(poeninja.MarketError):
