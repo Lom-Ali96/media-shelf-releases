@@ -32,7 +32,11 @@
 - docs/RESOURCES.md: crafting knowledge sources ranked by reliability, what each gives, what the app uses, open questions.
 - Craft of Exile comparison extended to the six influence pools: 62 of 64 cases identical (the 2 differences are a Craft of Exile wand generation-weight quirk).
 - Fix: Essences and Fossils no longer keep mods protected by "Prefixes/Suffixes cannot be changed" (they ignore locks; fractured mods still stay), per Maxroll's crafting resources.
-- 72 automated tests.
+- Influence Exalted Orbs (Shaper's, Elder's, Crusader's, Hunter's, Redeemer's, Warlord's): add the influence and one of its mods (experimental).
+- Eldritch: Embers/Ichors (tiers 1–4), dominance by tier, Eldritch Exalted Orb and Eldritch Annulment on the dominant side; items carry their Exarch/Eater implicit and the parser recognises them on pasted items (experimental).
+- Item Analyzer lists every action: usable now, usable once you pick an option (tested with every essence, fossil, tag, influence, Eldritch tier, bench craft), not possible (with reason), and mechanics that exist in 3.30 but are not modelled yet. Shows Eldritch implicits and the dominant side.
+- Simulator and recipe editor: inputs for influence and Eldritch side/tier.
+- 75 automated tests.
 
 ## 0.1.0 (2026-11-26): Milestone 1
 

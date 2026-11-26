@@ -46,6 +46,10 @@ MODS = {
     "XItemGenerationCannotRollAttackAffixes": _mod("of Spellcraft", "suffix", "ItemGenerationCannotRollAttackAffixes", "ItemGenerationCannotRollAttackAffixes", 1, [("default", 0)], "Cannot roll Attack Modifiers", domain="crafted"),
     "XItemGenerationCanHaveMultipleCraftedMods": _mod("of Crafting", "suffix", "ItemGenerationCanHaveMultipleCraftedMods", "ItemGenerationCanHaveMultipleCraftedMods", 1, [("default", 0)], "Can have up to 3 Crafted Modifiers", domain="crafted"),
     "XMasterItemGenerationCannotChangePrefixes": _mod("of the Order", "suffix", "ItemGenerationCannotChangePrefixes", "ItemGenerationCannotChangePrefixes", 1, [("default", 0)], "Prefix Modifiers cannot be changed", domain="crafted"),
+    # Eldritch implicits (tier = trailing digit): one Exarch family, one Eater family
+    "ExarchSpeedEldritchImplicit1": dict(_mod("", "searing_exarch_implicit", "ExSpeed", "ExSpeed", 1, [("default", 1000)], "5% increased Movement Speed"), stats=[]),
+    "ExarchSpeedEldritchImplicit3": dict(_mod("", "searing_exarch_implicit", "ExSpeed", "ExSpeed", 1, [("default", 1000)], "7% increased Movement Speed"), stats=[]),
+    "EaterLifeEldritchImplicit2": dict(_mod("", "eater_of_worlds_implicit", "EaLife", "EaLife", 1, [("default", 1000)], "+20 to maximum Life"), stats=[]),
     "XMasterItemGenerationCannotChangeOnePrefixes": _mod("of the Order", "suffix", "ItemGenerationCannotChangeOnePrefixes", "X", 1, [("default", 0)], "1 Prefix Modifier cannot be changed", domain="crafted"),
 }
 

@@ -64,6 +64,8 @@ class ParsedItem:
     corrupted: bool = False
     synthesised: bool = False
     implicits: list[str] = field(default_factory=list)
+    exarch: str | None = None  # Searing Exarch implicit mod id (found among the implicit lines)
+    eater: str | None = None   # Eater of Worlds implicit mod id
     enchants: list[str] = field(default_factory=list)
     mods: list[ParsedMod] = field(default_factory=list)
     advanced_format: bool = False
@@ -84,6 +86,8 @@ class ParsedItem:
             influences=frozenset(self.influences),
             corrupted=self.corrupted,
             synthesised=self.synthesised,
+            exarch=self.exarch,
+            eater=self.eater,
         )
 
 
@@ -257,7 +261,27 @@ class ItemParser:
                 self._resolve_advanced(item)
             else:
                 self._resolve_basic(item)
+            self._resolve_eldritch(item)
         return item
+
+    def _resolve_eldritch(self, item: ParsedItem) -> None:
+        """Find Searing Exarch / Eater of Worlds implicits among the implicit lines (1- or 2-line mods)."""
+        domain = self.gd.bases[item.base_id].domain
+        cache = self.gd.__dict__.setdefault("_eldritch_by_domain", {})
+        if domain not in cache:
+            cache[domain] = [m for m in self.gd.mods.values() if m.domain == domain
+                             and m.generation_type in ("searing_exarch_implicit", "eater_of_worlds_implicit")]
+        lines = item.implicits
+        for i in range(len(lines)):
+            for chunk in (lines[i:i + 2], lines[i:i + 1]):
+                hits = [m for m in cache[domain] if _match_lines(m, chunk) is not None]
+                side = {m.generation_type for m in hits}
+                if len(side) == 1:  # one side only; identical text on both sides stays unknown
+                    best = max(hits, key=lambda m: m.id)  # same text and side: any tier variant gives the same tier number
+                    attr = "exarch" if best.generation_type == "searing_exarch_implicit" else "eater"
+                    if getattr(item, attr) is None:
+                        setattr(item, attr, best.id)
+                    break
 
     # --------------------------------------------------------- resolution
     def _resolve_advanced(self, item: ParsedItem) -> None:

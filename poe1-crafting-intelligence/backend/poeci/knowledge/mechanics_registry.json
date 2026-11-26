@@ -250,15 +250,17 @@
       "id": "influence.add",
       "name": "Conqueror exalts / Awakener's Orb / Orb of Dominance / Maven's Orb",
       "category": "influence",
-      "status": "discovered_not_implemented",
-      "notes": "Influence tags already widen the mod pool correctly; the currencies that add influence are not modelled. Rules (Maxroll, Craft of Exile basics): conqueror exalts add an influenced mod to uninfluenced items; Awakener's Orb keeps up to one influenced mod from each item and rerolls the rest like a Chaos Orb; Orb of Dominance removes one influenced mod and upgrades another ('50/50'). Influence pools themselves are verified against Craft of Exile."
+      "status": "experimental",
+      "notes": "IMPLEMENTED (experimental, 2026-11-27): Shaper's/Elder's/Crusader's/Hunter's/Redeemer's/Warlord's Exalted Orb give an uninfluenced rare the influence and add one mod from that influence's own pool (pools verified against Craft of Exile). NOT yet: Awakener's Orb (two items), Orb of Dominance / elevated mods, Maven's Orb. Influence tags already widen the mod pool correctly; the currencies that add influence are not modelled. Rules (Maxroll, Craft of Exile basics): conqueror exalts add an influenced mod to uninfluenced items; Awakener's Orb keeps up to one influenced mod from each item and rerolls the rest like a Chaos Orb; Orb of Dominance removes one influenced mod and upgrades another ('50/50'). Influence pools themselves are verified against Craft of Exile.",
+      "engine_action": "influence_exalt"
     },
     {
       "id": "eldritch.implicits",
       "name": "Eldritch implicits, Ichors, Embers, Eldritch Chaos/Exalt/Annul",
       "category": "eldritch",
-      "status": "discovered_not_implemented",
-      "notes": "Searing Exarch / Eater of Worlds implicit mods are in the 3.30 game data (generation types searing_exarch_implicit / eater_of_worlds_implicit). 3.30 notes change only altar drop rewards (Threads), not the crafting itself. Rules (Maxroll crafting resources and Eldritch guide, read 2026-11-26): six tiers Lesser..Perfect; Embers (Exarch) and Ichors (Eater) reach Exceptional; Orb of Conflict upgrades one implicit and downgrades the other (50/50 at equal tiers, lower tier more likely to upgrade); dominance decides whether Eldritch Chaos/Exalted/Annulment act on prefixes (Exarch) or suffixes (Eater); not on Shaper/Elder/conqueror items. Tier weights are in the Craft of Exile data and RePoE."
+      "status": "experimental",
+      "notes": "IMPLEMENTED (experimental, 2026-11-27): Lesser-Exceptional Eldritch Embers/Ichors set the Exarch/Eater implicit (assumption eldritch_currency_tier: exactly the currency's tier, weighted by spawn weight); the higher tier is dominant (a tie is refused, undocumented); Eldritch Exalted Orb adds and Eldritch Annulment removes a prefix (Exarch dominant) or suffix (Eater dominant); the item parser recognises Eldritch implicits on pasted items. NOT yet: Eldritch Chaos Orb (how many mods it rerolls is undocumented), Orb of Conflict (odds partly documented), implicits as planner targets. Searing Exarch / Eater of Worlds implicit mods are in the 3.30 game data (generation types searing_exarch_implicit / eater_of_worlds_implicit). 3.30 notes change only altar drop rewards (Threads), not the crafting itself. Rules (Maxroll crafting resources and Eldritch guide, read 2026-11-26): six tiers Lesser..Perfect; Embers (Exarch) and Ichors (Eater) reach Exceptional; Orb of Conflict upgrades one implicit and downgrades the other (50/50 at equal tiers, lower tier more likely to upgrade); dominance decides whether Eldritch Chaos/Exalted/Annulment act on prefixes (Exarch) or suffixes (Eater); not on Shaper/Elder/conqueror items. Tier weights are in the Craft of Exile data and RePoE.",
+      "engine_action": "eldritch_currency, eldritch_exalted, eldritch_annulment"
     },
     {
       "id": "veiled.unveil",

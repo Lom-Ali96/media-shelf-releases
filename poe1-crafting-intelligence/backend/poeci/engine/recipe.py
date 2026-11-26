@@ -99,6 +99,13 @@ def cost_of(gd: GameData, action: str, params: dict, item: ItemState) -> dict[st
     if action == "remove_crafted":
         opt = next((o for o in gd.bench_options if (o.get("actions") or {}).get("remove_crafted_mods")), None)
         return _names(gd, (opt or {}).get("cost"))
+    if action == "influence_exalt":
+        return {f"{params['influence'].title()}'s Exalted Orb": 1}
+    if action == "influence_exalt":
+        return {f"{params['influence'].title()}'s Exalted Orb": 1}
+    if action == "eldritch_currency":
+        from .actions import ELDRITCH_TIERS
+        return {f"{ELDRITCH_TIERS[int(params['tier'])]} Eldritch {'Ember' if params['side'] == 'exarch' else 'Ichor'}": 1}
     if action == "harvest_reforge_same":
         return {HARVEST["_lifeforce"][k]: v for k, v in HARVEST["reforge_same_types"].items()}
     if action == "harvest_swap":

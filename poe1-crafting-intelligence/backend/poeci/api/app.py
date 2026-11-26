@@ -222,6 +222,11 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
             resp["open_prefixes"] = view.open_slots("prefix")
             resp["open_suffixes"] = view.open_slots("suffix")
             resp["valid_actions"] = _valid_actions(g, state)
+            resp["not_modelled"] = [{"name": n, "why": w} for n, w in NOT_MODELLED]
+            from ..engine.actions import ELDRITCH_TIERS, dominant_side, eldritch_tier
+            resp["eldritch"] = {side: {"text": g.mods[mid].text, "tier": ELDRITCH_TIERS.get(eldritch_tier(mid), "?")}
+                                for side, mid in (("exarch", state.exarch), ("eater", state.eater)) if mid}
+            resp["eldritch_dominant"] = dominant_side(state)
             resp["bench_options"] = _bench_options(g, state, st.conn, league())
         return resp
 
@@ -643,16 +648,50 @@ def _bench_options(g: GameData, item: ItemState, conn, lg: str) -> list[dict]:
     return sorted(out, key=lambda d: (d["affix"], d["text"]))
 
 
+# Mechanics that exist in 3.30 but are not modelled yet (shown so nothing looks silently missing).
+NOT_MODELLED = [
+    ("Eldritch Chaos Orb", "how many mods it rerolls on the dominant side is not documented"),
+    ("Orb of Conflict", "upgrade/downgrade odds are only partly documented"),
+    ("Awakener's Orb", "combines two items; the engine works on one item at a time"),
+    ("Orb of Dominance / elevated mods", "not built yet"),
+    ("Veiled Chaos/Exalted Orb, unveiling", "veiled mod pools and unveil choices not built yet"),
+    ("Recombinators", "community odds disagree (docs/RESOURCES.md)"),
+    ("Partial locks ('1/2 ... cannot be changed')", "which mod is protected is not documented"),
+    ("Beastcrafts: meta-modifier beast, imprint", "outcome rules not built yet"),
+    ("Gwennen coin-flip crafting (3.30 league)", "option list not published"),
+]
+
+
 def _valid_actions(g: GameData, item: ItemState) -> list[dict]:
+    """Every action with its state on this item: 'now' (usable), 'choice' (usable once you pick an
+    option such as an essence, a Harvest tag or an influence) or 'no' (with the reason)."""
     import random
 
+    sample_params = {  # options tried to see whether at least one works on this item
+        "essence": [{"essence_name": n} for n in g.essences_by_name],
+        "fossil": [{"fossil_names": [n]} for n in g.fossils_by_name],
+        "harvest_reforge": [{"tag": t} for t in ("life", "fire", "cold", "lightning", "attack", "caster", "speed", "critical", "defences", "chaos", "physical")],
+        "harvest_add_remove": [{"tag": t} for t in ("life", "fire", "cold", "lightning", "attack", "caster", "speed", "critical", "defences", "chaos", "physical")],
+        "harvest_swap": [{"kind": k, "from_element": a, "to_element": b} for k in ("resistance", "damage")
+                         for a in ("fire", "cold", "lightning") for b in ("fire", "cold", "lightning") if a != b],
+        "influence_exalt": [{"influence": i} for i in ("shaper", "elder", "crusader", "hunter", "redeemer", "warlord")],
+        "eldritch_currency": [{"side": s, "tier": t} for s in ("exarch", "eater") for t in (1, 4)],
+        "bench_craft": [{"mod_id": (o.get("actions") or {}).get("add_explicit_mod")} for o in g.bench_options
+                        if (o.get("actions") or {}).get("add_explicit_mod") in g.mods],
+    }
     out = []
     for a in ACTIONS.values():
-        if a.id in ("essence", "fossil", "bench_craft", "harvest_reforge", "harvest_add_remove", "harvest_swap"):
-            continue  # need parameters
-        try:
-            a.fn(g, item, random.Random(0))
-            out.append({"id": a.id, "name": a.name, "valid": True})
-        except (InvalidAction, UnsupportedMechanic) as e:
-            out.append({"id": a.id, "name": a.name, "valid": False, "reason": str(e)})
+        options = sample_params.get(a.id, [{}])
+        reason = None
+        for params in options:
+            try:
+                a.fn(g, item, random.Random(0), **params)
+                out.append({"id": a.id, "name": a.name, "valid": True, "state": "choice" if a.id in sample_params else "now",
+                            "experimental": a.status == "experimental"})
+                break
+            except (InvalidAction, UnsupportedMechanic, KeyError) as e:
+                reason = reason or str(e)
+        else:
+            out.append({"id": a.id, "name": a.name, "valid": False, "state": "no", "reason": reason,
+                        "experimental": a.status == "experimental"})
     return out

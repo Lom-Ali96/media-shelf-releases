@@ -33,6 +33,8 @@ class ItemState:
     corrupted: bool = False
     synthesised: bool = False
     quality: int = 0
+    exarch: str | None = None  # Searing Exarch implicit (mod id), from Eldritch Embers
+    eater: str | None = None   # Eater of Worlds implicit (mod id), from Eldritch Ichors
 
     def with_(self, **kw) -> "ItemState":
         return replace(self, **kw)

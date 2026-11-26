@@ -203,6 +203,7 @@
         <label>Fossils (comma) <input id="simFossils" placeholder="Pristine Fossil" size="18"></label>
         <label>Harvest tag <input id="simTag" placeholder="life, fire, speed..." size="14"></label>
         <label>Harvest swap <input id="simSwap" placeholder="resistance fire cold" size="20" title="kind (resistance or damage), from element, to element"></label>
+        <label>Influence / Eldritch <input id="simExtra" placeholder="hunter  or  exarch 3" size="16" title="Influence Exalted Orb: shaper, elder, crusader, hunter, redeemer, warlord. Eldritch Ember/Ichor: exarch or eater, then tier 1-4"></label>
       </div>
       <div class="row">
         <label>Target mod types <input id="simTarget" value="IncreasedLife:2" size="40" title="ModType:maxTier, comma separated. Mod types are shown in Mod Pool."></label>
@@ -314,7 +315,18 @@ $("parseGo").onclick = async () => {
       ${r.warnings.length ? `<ul class="warnings">${r.warnings.map(w => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
       <p class="muted">Implicits: ${esc(r.implicits.join(" / ") || "none")}</p>
       <table><tr><th>Affix</th><th>Text</th><th>Mod type</th><th>Tier</th><th>Identification</th></tr>${rows}</table>
-      ${r.valid_actions ? `<p><b>Actions you can use on this item:</b><br>${r.valid_actions.map(a => a.valid ? `<span class="pill ok">${esc(a.name)}</span>` : `<span class="pill no" title="${esc(a.reason)}">${esc(a.name)}</span>`).join(" ")}</p>` : ""}
+      ${r.eldritch && Object.keys(r.eldritch).length ? `<p><b>Eldritch implicits:</b> ${Object.entries(r.eldritch).map(([side, e]) =>
+        `${side === "exarch" ? "Searing Exarch" : "Eater of Worlds"} (${esc(e.tier)}): ${esc(e.text.split("\n").join(" / "))}`).join("; ")}
+        ${r.eldritch_dominant ? ` — <b>${r.eldritch_dominant === "exarch" ? "Searing Exarch" : "Eater of Worlds"} dominant</b> (Eldritch Exalted/Annulment act on ${r.eldritch_dominant === "exarch" ? "prefixes" : "suffixes"})` : " — no dominant side (equal tiers)"}</p>` : ""}
+      ${r.valid_actions ? (() => {
+        const pill = (a, cls) => `<span class="pill ${cls}" title="${esc(a.reason || (a.experimental ? "experimental" : ""))}">${esc(a.name)}${a.experimental ? " *" : ""}</span>`;
+        const now = r.valid_actions.filter(a => a.state === "now"), choice = r.valid_actions.filter(a => a.state === "choice"), no = r.valid_actions.filter(a => a.state === "no");
+        return `<p><b>Usable now (${now.length}):</b><br>${now.map(a => pill(a, "ok")).join(" ") || '<span class="muted">none</span>'}</p>
+          <p><b>Usable once you pick an option (${choice.length}):</b> <span class="muted small">essence, fossil, Harvest tag, influence, Eldritch tier, bench craft: try them in the Simulator or a Recipe</span><br>${choice.map(a => pill(a, "part")).join(" ") || '<span class="muted">none</span>'}</p>
+          <details><summary>Not possible on this item (${no.length}): hover for the reason</summary>${no.map(a => pill(a, "no")).join(" ")}</details>
+          ${r.not_modelled ? `<details><summary>Exists in 3.30 but not modelled yet (${r.not_modelled.length})</summary><ul>${r.not_modelled.map(n => `<li>${esc(n.name)}: <span class="muted">${esc(n.why)}</span></li>`).join("")}</ul></details>` : ""}
+          <p class="muted small">* experimental: built from sourced rules, not yet cross-checked against Craft of Exile.</p>`;
+      })() : ""}
       ${r.bench_options && r.bench_options.length ? `<details><summary><b>Bench crafts you can add now (${r.bench_options.length})</b></summary><table><tr><th>Affix</th><th>Craft</th><th>Cost</th><th class="num">Chaos</th></tr>` +
         r.bench_options.map(o => `<tr><td class="${o.affix}">${o.affix}</td><td class="crafted">${esc(o.text).replace(/\n/g, "<br>")}</td><td class="muted">${esc(Object.entries(o.cost).map(([k, v]) => v + " × " + k).join(", "))}</td><td class="num">${o.chaos != null ? num(o.chaos, 1) : "–"}</td></tr>`).join("") + "</table></details>" : ""}
       <div class="row" style="margin-top:8px">${r.base_name ? '<button class="primary" id="toPlan">Plan routes for this item</button> <button class="primary" id="toTrade">Find similar on trade ↗</button>' : ""}</div>
@@ -401,13 +413,16 @@ async function loadRoi() {
 // ---------------------------------------------------------------- Recipes (community / saved)
 let rxSteps = [], benchOpts = {base: null, list: []};
 const PARAM_ACTIONS = {essence: "Essence name", fossil: "Fossils (comma)", harvest_reforge: "Tag (life, fire...)",
-  harvest_add_remove: "Tag (life, fire...)", harvest_swap: "resistance fire cold", bench_craft: "bench"};
+  harvest_add_remove: "Tag (life, fire...)", harvest_swap: "resistance fire cold", bench_craft: "bench",
+  influence_exalt: "hunter, warlord, shaper...", eldritch_currency: "exarch 3  or  eater 1"};
 function paramText(s) {
   const p = s.params || {};
   if (s.action === "essence") return p.essence_name || "";
   if (s.action === "fossil") return (p.fossil_names || []).join(", ");
   if (s.action.startsWith("harvest_") && s.action !== "harvest_swap" && s.action !== "harvest_reforge_same") return p.tag || "";
   if (s.action === "harvest_swap") return [p.kind, p.from_element, p.to_element].filter(Boolean).join(" ");
+  if (s.action === "influence_exalt") return p.influence || "";
+  if (s.action === "eldritch_currency") return [p.side, p.tier].filter(x => x != null).join(" ");
   return "";
 }
 function setParam(s, text) {
@@ -415,6 +430,8 @@ function setParam(s, text) {
   if (s.action === "essence") s.params = {essence_name: text};
   else if (s.action === "fossil") s.params = {fossil_names: text.split(",").map(x => x.trim()).filter(Boolean)};
   else if (s.action === "harvest_swap") { const [kind, from_element, to_element] = text.toLowerCase().split(/\s+/); s.params = {kind, from_element, to_element}; }
+  else if (s.action === "influence_exalt") s.params = {influence: text.toLowerCase()};
+  else if (s.action === "eldritch_currency") { const [side, tier] = text.toLowerCase().split(/\s+/); s.params = {side, tier: +tier}; }
   else if (s.action.startsWith("harvest_") && s.action !== "harvest_reforge_same") s.params = {tag: text.toLowerCase()};
 }
 async function loadBenchOpts() {
@@ -719,6 +736,8 @@ $("simGo").onclick = async () => {
   if ($("simAction").value === "essence") params.essence_name = $("simEssence").value;
   if ($("simAction").value === "fossil") params.fossil_names = $("simFossils").value.split(",").map(s => s.trim()).filter(Boolean);
   if (["harvest_reforge", "harvest_add_remove"].includes($("simAction").value)) params.tag = $("simTag").value.trim().toLowerCase();
+  if ($("simAction").value === "influence_exalt") params.influence = $("simExtra").value.trim().toLowerCase();
+  if ($("simAction").value === "eldritch_currency") { const [side, tier] = $("simExtra").value.trim().toLowerCase().split(/\s+/); Object.assign(params, {side, tier: +tier}); }
   if ($("simAction").value === "harvest_swap") {
     const [kind, from_element, to_element] = $("simSwap").value.trim().toLowerCase().split(/\s+/);
     Object.assign(params, {kind, from_element, to_element});

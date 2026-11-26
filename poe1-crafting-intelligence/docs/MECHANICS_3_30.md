@@ -50,7 +50,7 @@ Researched 2026-11-26 for the "all crafting possibilities" goal. Every statement
 | 4 | ✅ Harvest add/remove and resistance/damage swaps (experimental actions; swap keeps the tier number) | ✅ list + costs | Swap = "similar tier" rule |
 | 5 | ✅ Lynx/Wolf beastcrafts (experimental actions). ⬜ metamod beast, imprint | ✅ list | Beast prices: poe.ninja Beast category (fetched by default) |
 | 6 | **Recombinators** | ⚠️ rules only | Outcome odds are community-measured; need a source |
-| 7 | ✅ Fracturing Orb (experimental, poedb rule; planner route *Fracture, then Chaos*). ⬜ Eldritch implicits/currencies, influence currencies, veiled/unveil, double corruption | partly (mods in data) | Odds mostly unpublished; whether crafted mods can be fractured |
+| 7 | ✅ Fracturing Orb (experimental; planner route *Fracture, then Chaos*). ✅ influence Exalted Orbs, Eldritch Embers/Ichors + Eldritch Exalted/Annulment (experimental). ⬜ Eldritch Chaos, Orb of Conflict, Awakener's Orb, Orb of Dominance, veiled/unveil, double corruption | partly (mods in data) | Odds mostly unpublished; whether crafted mods can be fractured |
 | – | Gwennen coin flip | ❌ no data | Wait until the option list is published |
 
 Lifeforce, Rancour and beast prices: poe.ninja's economy covers some of these; anything missing is entered as a manual price (Settings).

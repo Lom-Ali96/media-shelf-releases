@@ -13,12 +13,13 @@ from __future__ import annotations
 import inspect
 import json
 import random
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
 from ..knowledge.gamedata import GameData, Mod
-from .item import JEWEL_DOMAINS, ItemState, ItemView, ModInstance, _tier_family, tier_index
+from .item import JEWEL_DOMAINS, ItemState, ItemView, ModInstance, _tier_family, spawn_weight, tier_index
 from .modpool import WeightFn, eligible_pool
 
 _ASSUMPTIONS = json.loads((Path(__file__).parents[1] / "knowledge" / "assumptions.json").read_text())
@@ -370,6 +371,90 @@ def beast_prefix_for_suffix(gd, item, rng, **_):
     return _beast_swap(gd, item, rng, "suffix", "prefix")
 
 
+# ------------------------------------------------------------ influence (EXPERIMENTAL)
+INFLUENCES = ("shaper", "elder", "crusader", "hunter", "redeemer", "warlord")
+
+
+def influence_exalt(gd, item, rng, *, influence: str, **_):
+    """<Influence>'s Exalted Orb: give an uninfluenced rare that influence and add one of its
+    mods (weights from that influence's own pool, verified against Craft of Exile)."""
+    v = ItemView(gd, item)
+    _common_checks(v)
+    _require(influence in INFLUENCES, f"influence must be one of {', '.join(INFLUENCES)}")
+    _require(item.rarity == "rare", "influence Exalted Orbs need a rare item")
+    _require(not item.influences, "item is already influenced")
+    _require(v.open_slots("prefix") + v.open_slots("suffix") > 0, "no open affix")
+    plain = {e.mod.id for e in eligible_pool(gd, item)}
+    with_infl = item.with_(influences=frozenset({influence}))
+    pool = [e for e in eligible_pool(gd, with_infl) if e.mod.id not in plain]
+    _require(bool(pool), f"no {influence} modifier can roll on this item")
+    entry = _weighted_choice(rng, pool, [e.weight for e in pool])
+    return with_infl.with_(explicits=item.explicits + (_instance(entry.mod, rng),))
+
+
+# ------------------------------------------------------------ Eldritch (EXPERIMENTAL)
+# Rules from Maxroll (crafting resources + Eldritch guide, read 2026-11-26): six implicit
+# tiers; Embers give a Searing Exarch implicit, Ichors an Eater of Worlds implicit; the side
+# with the higher tier is dominant and decides whether Eldritch Exalted/Annulment act on
+# prefixes (Exarch) or suffixes (Eater); not on Shaper/Elder/conqueror items. That a currency
+# rolls exactly its own tier is an assumption (assumptions.json: eldritch_currency_tier).
+ELDRITCH_TIERS = {1: "Lesser", 2: "Greater", 3: "Grand", 4: "Exceptional", 5: "Exquisite", 6: "Perfect"}
+ELDRITCH_SIDES = {"exarch": "searing_exarch_implicit", "eater": "eater_of_worlds_implicit"}
+
+
+def eldritch_tier(mod_id: str | None) -> int:
+    m = re.search(r"(\d+)\D*$", mod_id or "")
+    return int(m.group(1)) if m else 0
+
+
+def dominant_side(item: ItemState) -> str | None:
+    ex, ea = eldritch_tier(item.exarch), eldritch_tier(item.eater)
+    if ex == ea:
+        return None  # a tie is not documented: refuse rather than guess
+    return "exarch" if ex > ea else "eater"
+
+
+def eldritch_currency(gd, item, rng, *, side: str, tier: int, **_):
+    """Lesser/Greater/Grand/Exceptional Eldritch Ember (exarch) or Ichor (eater)."""
+    v = ItemView(gd, item)
+    _common_checks(v)
+    _require(side in ELDRITCH_SIDES and tier in (1, 2, 3, 4), "side must be exarch/eater and tier 1-4")
+    _require(item.rarity != "unique", "not usable on unique items")
+    _require(not item.influences, "Eldritch implicits cannot be added to Shaper, Elder or conqueror items")
+    tags = v.tags()
+    pool = [m for m in gd.mods.values() if m.generation_type == ELDRITCH_SIDES[side] and m.domain == v.base.domain
+            and eldritch_tier(m.id) == tier and spawn_weight(m, tags) > 0]
+    _require(bool(pool), "no Eldritch implicit of this tier can roll on this item")
+    pick = _weighted_choice(rng, pool, [spawn_weight(m, tags) for m in pool])
+    return item.with_(**{side: pick.id})
+
+
+def _eldritch_side(item: ItemState) -> str:
+    side = dominant_side(item)
+    _require(side is not None, "needs a dominant Eldritch implicit (the two tiers are equal or missing)")
+    return "prefix" if side == "exarch" else "suffix"
+
+
+def eldritch_exalted(gd, item, rng, **_):
+    """Eldritch Exalted Orb: add a prefix (Exarch dominant) or suffix (Eater dominant)."""
+    v = ItemView(gd, item)
+    _common_checks(v)
+    _require(item.rarity == "rare", "Eldritch Exalted Orb needs a rare item")
+    gen = _eldritch_side(item)
+    _require(v.open_slots(gen) > 0, f"no open {gen}")
+    out = _add_tagged(gd, item, rng, None, gen_types=(gen,))
+    _require(out is not None, f"no {gen} can be added")
+    return out
+
+
+def eldritch_annulment(gd, item, rng, **_):
+    """Eldritch Orb of Annulment: remove a random prefix (Exarch) or suffix (Eater)."""
+    v = ItemView(gd, item)
+    _common_checks(v)
+    _require(item.rarity in ("magic", "rare"), "needs a magic or rare item")
+    return _remove_random(item, v, rng, _eldritch_side(item))
+
+
 @dataclass(frozen=True)
 class ActionInfo:
     id: str
@@ -403,6 +488,12 @@ ACTIONS: dict[str, ActionInfo] = {
                    ("rare_mod_count", "harvest_same_type_multiplier", "harvest_same_type_keeps_mod_count"), status="experimental"),
         ActionInfo("harvest_swap", "Harvest: change a resistance/damage modifier to another element", harvest_swap, None, status="experimental"),
         ActionInfo("fracturing", "Fracturing Orb", fracturing, "Fracturing Orb", ("fracture_excludes_crafted",), status="experimental"),
+        ActionInfo("influence_exalt", "Influence Exalted Orb (Shaper's, Elder's, Crusader's, Hunter's, Redeemer's, Warlord's)",
+                   influence_exalt, None, status="experimental"),
+        ActionInfo("eldritch_currency", "Eldritch Ember / Ichor (Lesser to Exceptional)", eldritch_currency, None,
+                   ("eldritch_currency_tier",), status="experimental"),
+        ActionInfo("eldritch_exalted", "Eldritch Exalted Orb", eldritch_exalted, "Eldritch Exalted Orb", status="experimental"),
+        ActionInfo("eldritch_annulment", "Eldritch Orb of Annulment", eldritch_annulment, "Eldritch Orb of Annulment", status="experimental"),
         ActionInfo("beast_suffix_for_prefix", "Beastcraft (Farric Lynx Alpha): add a suffix, remove a random prefix", beast_suffix_for_prefix, "Farric Lynx Alpha", status="experimental"),
         ActionInfo("beast_prefix_for_suffix", "Beastcraft (Farric Wolf Alpha): add a prefix, remove a random suffix", beast_prefix_for_suffix, "Farric Wolf Alpha", status="experimental"),
     ]

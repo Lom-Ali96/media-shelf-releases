@@ -51,5 +51,12 @@
     "status": "placeholder_unverified",
     "source": "poedb.tw/us/Fracturing_Orb says only 'a random modifier' on a rare with at least 4 modifiers, not on influenced or fractured items. Whether crafted mods can be picked is not stated.",
     "last_reviewed": "2026-11-26"
+  },
+  "eldritch_currency_tier": {
+    "value": "own tier",
+    "applies_to": "Lesser/Greater/Grand/Exceptional Eldritch Ember or Ichor: rolls an implicit of exactly its own tier (1-4), weighted by the implicit's spawn weight for the base",
+    "status": "placeholder_unverified",
+    "source": "Maxroll Eldritch guide (read 2026-11-26) says Embers/Ichors reach tiers 1-4; whether a currency can also roll lower tiers is not stated. Game data tags 'no_tier_N_eldritch_implicit' suggest per-tier blocking.",
+    "last_reviewed": "2026-11-26"
   }
 }
