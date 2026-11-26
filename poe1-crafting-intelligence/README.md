@@ -8,6 +8,7 @@ A personal, local, evidence-based crafting assistant for **Path of Exile 1**. It
 - **Mod Pool:** every mod a base can roll, with its tier and *exact* probability. Handles item level, influences and metamods.
 - **Item Analyzer:** paste an item (Ctrl+C or Ctrl+Alt+C) to see its mods, tiers and open affixes, and which currencies are legal on it.
 - **Route Planner:** pick the mods you want (or click *Plan routes for this item* in the Item Analyzer), set the worst tier you'd accept, optionally finish one mod on the crafting bench. It compares the standard methods (Chaos spam, Essence spam, Alteration → Regal → Exalt) by expected cost in chaos/divine, with step lists, the chance per try and the assumptions used. Targets that never hit in the simulation get a *minimum* cost instead of a guess.
+- **ROI:** each plan gets a *Check prices on the trade site* button (a pre-filled search you open yourself; the app never searches or reads the trade site). Enter the sale price to see profit and ROI per route, and save it to the **ROI board**, which lists your crafts by expected profit.
 - **Simulator:** repeat a currency until a target is hit. Reports a Monte Carlo estimate with a 95% interval, attempt percentiles, expected cost when prices are known, and the assumptions used.
 - **Coverage dashboard:** every known mechanic and how well it is supported. It does not claim 100%.
 - **Patch gate:** if game data moves to a patch the rules weren't reviewed for, every result is flagged.

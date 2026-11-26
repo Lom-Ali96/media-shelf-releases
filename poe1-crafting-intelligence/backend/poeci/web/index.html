@@ -118,6 +118,7 @@
       <div class="small muted">Tip: analyse an item in the Item Analyzer and click <b>Plan routes for this item</b>. Raise "worst tier ok" to make a route realistic; tick <b>bench</b> for a mod you will finish with the crafting bench. Takes a few seconds per route.</div>
     </div>
     <div class="card"><h2>Routes (cheapest first)</h2><div id="planOut" class="small muted">No plan yet.</div></div>
+    <div class="card"><h2>Your crafts by profit (ROI board)</h2><div id="roiOut" class="small muted">Nothing saved yet.</div></div>
   </section>
 
   <section id="sim">
@@ -259,18 +260,61 @@ function renderWants() {
   $("planWants").querySelectorAll("[data-del]").forEach(el => el.onclick = () => { planWants.splice(+el.dataset.del, 1); renderWants(); });
 }
 $("planAdd").onclick = () => { const t = $("planAddType").value.trim(); if (t) { planWants.push({mod_type: t, max_tier: 99, bench: false, on: true}); $("planAddType").value = ""; renderWants(); } };
+let divineChaos = null;
+const money = (c) => c == null ? null : `${num(c, 0)} c` + (divineChaos ? ` <span class="muted">(${num(c / divineChaos, 2)} div)</span>` : "");
+const planBody = () => ({base: $("planBase").value, item_level: +$("planIlvl").value,
+  influences: $("planInfl").value.split(",").map(s => s.trim()).filter(Boolean),
+  wants: planWants.filter(w => w.on).map(({mod_type, max_tier, bench}) => ({mod_type, max_tier, bench}))});
+function showProfit(r) {
+  const sale = +$("saleChaos").value, base = r.base_price ? r.base_price.chaos_value : 0;
+  document.querySelectorAll("[data-profit]").forEach(el => {
+    const cost = r.routes[+el.dataset.profit].expected_chaos;
+    if (!sale || cost == null) { el.innerHTML = ""; return; }
+    const profit = sale - cost - base;
+    el.innerHTML = `If sold for ${money(sale)}: <b class="${profit >= 0 ? "good" : "bad"}">${profit >= 0 ? "+" : ""}${money(profit)}</b> profit (ROI ${pct(profit / (cost + base))})${r.base_price ? "" : ", base item not included"}`;
+  });
+}
+async function loadRoi() {
+  try {
+    const rows = await api("/api/plans");
+    $("roiOut").innerHTML = rows.length ? `<table><tr><th>Base</th><th>Wanted mods</th><th>Cheapest route</th><th class="num">Cost</th><th class="num">Sale</th><th class="num">Profit</th><th class="num">ROI</th><th>Saved</th><th></th></tr>` +
+      rows.map(d => `<tr><td>${esc(d.base)} <span class="muted">ilvl ${d.item_level}</span></td>
+        <td>${d.wants.map(w => `${esc(w.mod_type)}${w.max_tier < 99 ? " ≤T" + w.max_tier : ""}${w.bench ? " (bench)" : ""}`).join("<br>")}</td>
+        <td>${esc(d.best_route ?? "–")}</td><td class="num">${d.best_cost_chaos != null ? num(d.best_cost_chaos, 0) + " c" : "–"}</td>
+        <td class="num">${num(d.sale_chaos, 0)} c</td>
+        <td class="num ${d.profit_chaos >= 0 ? "good" : "bad"}">${d.profit_chaos != null ? num(d.profit_chaos, 0) + " c" : "–"}</td>
+        <td class="num">${d.roi != null ? pct(d.roi) : "–"}</td><td class="muted">${esc(d.updated_at.slice(0, 10))}</td>
+        <td><button data-load="${d.key}">Open</button> <button data-drop="${d.key}">✕</button></td></tr>`).join("") +
+      `</table><p class="muted">Costs are from when you saved; re-plan to refresh them. ${rows.some(d => d.base_price_chaos == null) ? "Profit excludes base items without a manual price." : ""}</p>`
+      : "Nothing saved yet. Plan a craft, check the trade link, enter the sale price and click Save.";
+    $("roiOut").querySelectorAll("[data-drop]").forEach(b => b.onclick = async () => { await api(`/api/plans/${b.dataset.drop}`, {method: "DELETE"}); loadRoi(); });
+    $("roiOut").querySelectorAll("[data-load]").forEach(b => b.onclick = () => {
+      const d = rows.find(x => x.key === b.dataset.load);
+      $("planBase").value = d.base; $("planIlvl").value = d.item_level; $("planInfl").value = d.influences.join(", ");
+      planWants = d.wants.map(w => ({...w, on: true})); renderWants(); $("planGo").click();
+    });
+  } catch (e) { $("roiOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+}
 $("planGo").onclick = async () => {
-  const wants = planWants.filter(w => w.on).map(({mod_type, max_tier, bench}) => ({mod_type, max_tier, bench}));
+  const body = planBody();
   $("planOut").textContent = "Simulating routes… (a few seconds each)";
   try {
-    const r = await api("/api/plan", {method: "POST", body: JSON.stringify({base: $("planBase").value, item_level: +$("planIlvl").value,
-      influences: $("planInfl").value.split(",").map(s => s.trim()).filter(Boolean), wants})});
-    const money = (c) => c == null ? null : `${num(c, 0)} c` + (r.divine_chaos ? ` <span class="muted">(${num(c / r.divine_chaos, 2)} div)</span>` : "");
+    const r = await api("/api/plan", {method: "POST", body: JSON.stringify(body)});
+    divineChaos = r.divine_chaos;
     const units = (u) => Object.entries(u).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${num(v, v < 10 ? 1 : 0)} × ${esc(k)}`).join(", ");
     $("planOut").innerHTML = `
       ${r.rules_verified_for_current_data ? "" : '<p class="bad">Crafting rules have not been reviewed for this patch. Treat results as unverified.</p>'}
       ${r.league ? "" : '<p class="warn">No league set: costs are shown as currency counts only (Settings).</p>'}
-      <p>Base item <b>${esc(r.base)}</b>: ${r.base_price ? money(r.base_price.chaos_value) + " (manual price)" : '<span class="muted">price not included. Add it under Settings → Manual price to see it here.</span>'}</p>` +
+      <p>Base item <b>${esc(r.base)}</b>: ${r.base_price ? money(r.base_price.chaos_value) + " (manual price)" : '<span class="muted">price not included. Add it under Settings → Manual price to see it here.</span>'}</p>
+      <div class="card" style="background:var(--panel2)"><b>What does the finished item sell for?</b>
+        <div class="row" style="margin-top:6px">
+          ${r.trade_url ? '<label>&nbsp;<button class="primary" id="tradeLink">Check prices on the trade site ↗</button></label>' : ""}
+          <label>Sale price (chaos) <input id="saleChaos" type="number" min="0" step="1" style="width:110px" value="${r.saved_sale_chaos ?? ""}"></label>
+          <label>&nbsp;<button class="primary" id="savePlan">Save to ROI board</button></label>
+        </div>
+        <div class="muted">The link opens a search for similar items in your browser; the app itself never searches the trade site. Look at the cheapest few listings and enter a realistic price.</div>
+        ${r.trade_notes.length ? `<ul class="warnings">${r.trade_notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
+      </div>` +
       r.routes.map((rt, i) => {
         const [lo, hi] = rt.try_success_ci95;
         const cost = rt.successes ? (money(rt.expected_chaos) ?? `<span class="muted">missing price for ${esc(rt.missing_prices.join(", "))}</span>`)
@@ -280,12 +324,24 @@ $("planGo").onclick = async () => {
           <div class="row" style="justify-content:space-between"><b class="${i === 0 && rt.successes ? "good" : ""}">${i + 1}. ${esc(rt.name)}</b><span style="font-size:15px">${cost}</span></div>
           <ol>${rt.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
           <div class="muted">${rt.successes ? "Expected currency: " + units(rt.expected_units) : rt.at_least_units ? "At least: " + units(rt.at_least_units) : ""}</div>
+          <div data-profit="${i}"></div>
           <div class="muted">Chance per try ${pct(rt.successes / rt.tries)} (95% CI ${pct(lo)} – ${pct(hi)}), ${num(rt.tries, 0)} tries simulated. ${range}</div>
           ${rt.notes.length ? `<ul class="warnings">${rt.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
           ${rt.assumptions.length ? `<div class="muted">Assumptions: ${rt.assumptions.map(a => `<code>${esc(a.name)}</code> <span class="warn">(${esc(a.status)})</span>`).join(", ")}</div>` : ""}
         </div>`;
       }).join("") +
       '<p class="muted">Only standard methods are compared (Chaos, Essences, Alteration/Regal/Exalt, bench). Fossils, Harvest, beasts and metamod tricks are not included yet, so a cheaper route may exist. Costs are expected values: you can be luckier or unluckier.</p>';
+    if (r.trade_url) $("tradeLink").onclick = () => window.open(r.trade_url, "_blank", "noopener");
+    $("saleChaos").oninput = () => showProfit(r);
+    showProfit(r);
+    $("savePlan").onclick = async () => {
+      const best = r.routes.find(x => x.expected_chaos != null);
+      try {
+        await api("/api/plans", {method: "POST", body: JSON.stringify({...body, sale_chaos: +$("saleChaos").value,
+          best_route: best ? best.name : null, best_cost_chaos: best ? best.expected_chaos : null})});
+        loadRoi();
+      } catch (e) { alert(e.message); }
+    };
   } catch (e) { $("planOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
 };
 
@@ -331,7 +387,7 @@ $("checkUpdates").onclick = async () => { try { const r = await api("/api/update
 $("fetchMarket").onclick = async () => { $("dataOut").textContent = "Fetching…"; try { $("dataOut").textContent = JSON.stringify(await api("/api/market/fetch", {method: "POST", body: "{}"}), null, 2); loadStatus(); } catch (e) { $("dataOut").textContent = e.message; } };
 $("saveOverride").onclick = async () => { try { $("dataOut").textContent = JSON.stringify(await api("/api/market/override", {method: "POST", body: JSON.stringify({name: $("ovName").value, chaos_value: +$("ovValue").value})}), null, 2); } catch (e) { $("dataOut").textContent = e.message; } };
 
-loadStatus(); loadBases(); loadActions();
+loadStatus(); loadBases(); loadActions(); loadRoi();
 </script>
 </body>
 </html>

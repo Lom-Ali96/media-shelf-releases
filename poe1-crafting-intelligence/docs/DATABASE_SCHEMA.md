@@ -13,6 +13,7 @@ Game data is **not** stored in SQL. Each patch is an immutable JSON snapshot und
 | `prices` | Normalised rows per snapshot (`is_listing_price = 1`: asking price, not a sale) |
 | `price_overrides` | Your manual prices; these take priority over fetched ones |
 | `inventory` | Currency and materials per league (UI comes in Phase 10) |
+| `saved_plans` | (`002_saved_plans.sql`) Crafts saved from the Route Planner: wanted mods, your sale price, cheapest route and its expected cost when saved (ROI board) |
 
 ## Planned entity relationship diagram
 

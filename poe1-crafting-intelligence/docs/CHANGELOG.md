@@ -4,7 +4,8 @@
 
 - Route Planner (`engine/planner.py`, `POST /api/plan`, *Route Planner* tab): ranks Chaos spam, Essence spam (strongest essence per wanted mod) and Alteration → Regal → Exalt by expected cost (Wald's identity over independent tries), with an optional final bench craft priced from the bench data. Unhit targets report a 95% minimum. Item Analyzer has a *Plan routes for this item* button.
 - poe.ninja adapter moved to the live `/poe1/api/economy/...` endpoints (the old ones return 404); an unknown league is reported instead of silently saving nothing.
-- 35 automated tests.
+- ROI: trade-site search links with the wanted mods pre-filled (`market/trade.py`; stat ids from the public static list `/api/trade/data/stats`, cached per game version), sale price entry, profit/ROI per route, and an ROI board of saved crafts (`saved_plans` table, `GET/POST /api/plans`, `DELETE /api/plans/{key}`).
+- 40 automated tests.
 
 ## 0.1.0 (2026-11-26): Milestone 1
 

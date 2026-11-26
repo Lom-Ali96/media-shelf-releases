@@ -1,7 +1,10 @@
 """HTTP API + single-page UI. Start with:  python -m poeci  (see INSTALLATION.md)."""
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import asdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -16,7 +19,7 @@ from ..engine.simulate import ModRequirement, Target, exact_next_mod_probability
 from ..knowledge import importer
 from ..knowledge.coverage import coverage_report
 from ..knowledge.gamedata import GameData
-from ..market import poeninja
+from ..market import poeninja, trade
 from ..parsing.clipboard import ItemParser
 from ..storage import db
 from ..updates import versions
@@ -58,6 +61,11 @@ class PlanIn(BaseModel):
     influences: list[str] = Field(default_factory=list)
     wants: list[WantIn]
     seed: int = 1
+
+class SavePlanIn(PlanIn):
+    sale_chaos: float = Field(gt=0)
+    best_route: str | None = None
+    best_cost_chaos: float | None = Field(None, ge=0)
 
 class FetchIn(BaseModel):
     categories: list[str] = Field(default_factory=lambda: ["Currency", "Essence", "Fossil"])
@@ -221,9 +229,10 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
         b = g.bases_by_name.get(body.base) or g.bases.get(body.base)
         if b is None:
             raise HTTPException(404, f"unknown base {body.base!r}")
+        wants = [Want(w.mod_type, w.max_tier, w.bench) for w in body.wants]
+        infl = frozenset(i.lower() for i in body.influences)
         try:
-            routes = plan_routes(g, b.id, body.item_level, [Want(w.mod_type, w.max_tier, w.bench) for w in body.wants],
-                                 influences=frozenset(i.lower() for i in body.influences), seed=body.seed)
+            routes = plan_routes(g, b.id, body.item_level, wants, influences=infl, seed=body.seed)
         except (InvalidAction, UnsupportedMechanic) as e:
             raise HTTPException(422, str(e))
         lg = league()
@@ -250,9 +259,56 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
         out.sort(key=lambda d: (d["expected_chaos"] is None, d["expected_chaos"] or d["at_least_chaos"] or float("inf")))
         divine = poeninja.price_of(st.conn, lg, "Divine Orb") if lg else None
         base_price = poeninja.price_of(st.conn, lg, b.name) if lg else None
+        trade_url, trade_notes = None, []
+        if lg:
+            try:
+                filters, trade_notes = trade.stat_filters(g, ItemState(b.id, body.item_level, influences=infl), wants,
+                                                          trade.load_stats(g.version))
+                trade_url = trade.search_url(lg, b.name, filters)
+            except Exception as e:  # noqa: BLE001 - the plan is still useful without a link
+                trade_notes = [f"No trade link: {e}"]
+        key = _plan_key(body)
+        saved = st.conn.execute("SELECT sale_chaos FROM saved_plans WHERE league=? AND key=?", (lg, key)).fetchone()
         return {"base": b.name, "routes": out, "divine_chaos": divine["chaos_value"] if divine else None,
-                "base_price": base_price, "league": lg or None,
+                "base_price": base_price, "league": lg or None, "key": key,
+                "trade_url": trade_url, "trade_notes": trade_notes, "saved_sale_chaos": saved["sale_chaos"] if saved else None,
                 "rules_verified_for_current_data": versions.status(st.conn, g.version)["rules_verified_for_current_data"]}
+
+    @app.post("/api/plans")
+    def save_plan(body: SavePlanIn):
+        if not league():
+            raise HTTPException(422, "select a league first")
+        st.conn.execute(
+            "INSERT INTO saved_plans(league, key, base, item_level, influences, wants, sale_chaos, best_route, best_cost_chaos, updated_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(league, key) DO UPDATE SET sale_chaos=excluded.sale_chaos, "
+            "best_route=excluded.best_route, best_cost_chaos=excluded.best_cost_chaos, updated_at=excluded.updated_at",
+            (league(), _plan_key(body), body.base, body.item_level, json.dumps(body.influences),
+             json.dumps([w.model_dump() for w in body.wants]), body.sale_chaos, body.best_route, body.best_cost_chaos,
+             datetime.now(timezone.utc).isoformat(timespec="seconds")))
+        st.conn.commit()
+        return {"key": _plan_key(body)}
+
+    @app.get("/api/plans")
+    def list_plans():
+        """Saved crafts for the current league, best expected profit first."""
+        out = []
+        for r in st.conn.execute("SELECT * FROM saved_plans WHERE league=?", (league(),)):
+            d = dict(r)
+            d["influences"], d["wants"] = json.loads(d["influences"]), json.loads(d["wants"])
+            base_price = poeninja.price_of(st.conn, league(), d["base"])
+            d["base_price_chaos"] = base_price["chaos_value"] if base_price else None
+            cost = d["best_cost_chaos"]
+            d["profit_chaos"] = None if cost is None else d["sale_chaos"] - cost - (d["base_price_chaos"] or 0)
+            d["roi"] = None if cost is None or cost + (d["base_price_chaos"] or 0) <= 0 else                 d["profit_chaos"] / (cost + (d["base_price_chaos"] or 0))
+            out.append(d)
+        out.sort(key=lambda d: (d["profit_chaos"] is None, -(d["profit_chaos"] or 0)))
+        return out
+
+    @app.delete("/api/plans/{key}")
+    def delete_plan(key: str):
+        st.conn.execute("DELETE FROM saved_plans WHERE league=? AND key=?", (league(), key))
+        st.conn.commit()
+        return {"deleted": key}
 
     @app.get("/api/actions")
     def actions():
@@ -300,6 +356,12 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
         return p
 
     return app
+
+
+def _plan_key(body: PlanIn) -> str:
+    wants = sorted((w.mod_type, w.max_tier, w.bench) for w in body.wants)
+    raw = json.dumps([body.base, body.item_level, sorted(i.lower() for i in body.influences), wants])
+    return hashlib.sha1(raw.encode()).hexdigest()[:16]
 
 
 def _valid_actions(g: GameData, item: ItemState) -> list[dict]:

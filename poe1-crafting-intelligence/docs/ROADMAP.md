@@ -51,7 +51,7 @@
 ### Requested by the user (2026-11-26)
 
 - ✅ **Route planner, stage A:** paste an item or choose wanted mods with a worst acceptable tier → standard methods ranked by expected cost, with steps (`engine/planner.py`). Next: more templates (fossils once verified, essence + exalt combos, multimod finishes), then the real pathfinder (P2 above).
-- ⬜ **ROI:** sale price of the finished item entered manually, helped by a generated trade-site search link the user opens in their own browser (no automated trade-site access). ROI = sale price − expected route cost.
+- ✅ **ROI:** trade-site search link with wanted mods pre-filled (opened by the user), manual sale price, profit/ROI per route, ROI board of saved crafts sorted by profit. Next: refresh saved costs on demand; show a bad-luck (90%) cost next to the expected cost.
 - ⬜ **Import gear from Path of Building codes** (covers poe.ninja character pages, which offer a PoB export). Screenshots are not planned: they don't show tiers and text recognition misreads numbers.
 
 ## Complexity estimate
