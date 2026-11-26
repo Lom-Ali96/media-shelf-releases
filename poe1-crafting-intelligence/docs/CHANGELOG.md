@@ -29,7 +29,10 @@
 - Idea collector: items from the Item Analyzer (with the price seen) or the PoB import become craft ideas, grouped under 10 / 10–100 / over 100 divine with planned cost and profit (`saved_ideas`, `/api/ideas/collect`, `/api/ideas/collected*`).
 - Recipe validation names the step and the missing detail; partial locks are not offered in the bench picker; readable step descriptions.
 - Fix: a regex word boundary (``) had been written as a hidden backspace character; new test scans all code for control characters.
-- 71 automated tests.
+- docs/RESOURCES.md: crafting knowledge sources ranked by reliability, what each gives, what the app uses, open questions.
+- Craft of Exile comparison extended to the six influence pools: 62 of 64 cases identical (the 2 differences are a Craft of Exile wand generation-weight quirk).
+- Fix: Essences and Fossils no longer keep mods protected by "Prefixes/Suffixes cannot be changed" (they ignore locks; fractured mods still stay), per Maxroll's crafting resources.
+- 72 automated tests.
 
 ## 0.1.0 (2026-11-26): Milestone 1
 

@@ -81,14 +81,16 @@ def test_mod_pools_match_craft_of_exile(real_gd):
     if not coe.CACHE.exists():
         pytest.skip("Craft of Exile data not downloaded (run scripts/compare_craftofexile.py once)")
     d = coe.load_coe()
-    known = {("Imbued Wand", ("suffix", "ManaLeech", 50))}  # explained in the registry notes
+    # Both explained in the registry notes: CoE skips the data's 50% wand generation weight on these.
+    known = {("Imbued Wand", None, ("suffix", "ManaLeech", 50)),
+             ("Imbued Wand", "hunter", ("prefix", "AddedLightningDamagePerIntelligence", 68))}
     for ilvl in (30, 68, 86):
-        for base in coe.BASES:
-            theirs, _ = coe.coe_tiers(d, base, ilvl)
-            ours, _ = coe.our_tiers(real_gd, base, ilvl)
-            assert set(theirs) == set(ours), (base, ilvl)
-            bad = [k for k in theirs if abs(theirs[k] - ours[k]) > 0.5 and (base, k) not in known]
-            assert not bad, (base, ilvl, bad)
+        for base, influence in coe.CASES:
+            theirs, _ = coe.coe_tiers(d, base, ilvl, influence)
+            ours, _ = coe.our_tiers(real_gd, base, ilvl, influence)
+            assert set(theirs) == set(ours), (base, influence, ilvl)
+            bad = [k for k in theirs if abs(theirs[k] - ours[k]) > 0.5 and (base, influence, k) not in known]
+            assert not bad, (base, influence, ilvl, bad)
 
 
 def test_lock_meta_crafts_cost_what_the_3_30_patch_notes_say(real_gd):

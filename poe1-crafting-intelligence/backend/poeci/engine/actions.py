@@ -117,9 +117,13 @@ def regal(gd, item, rng, **_):
     return out or item.with_(rarity="rare")
 
 
-def _reforge_rare(gd, item, rng, forced: tuple[ModInstance, ...] = (), weight_fn=None, count: int | None = None):
+def _reforge_rare(gd, item, rng, forced: tuple[ModInstance, ...] = (), weight_fn=None, count: int | None = None,
+                  keep_locked: bool = True):
+    """Reroll a rare. Fractured mods always stay; mods protected by a prefix/suffix lock stay only
+    when `keep_locked` (Chaos, Harvest). Essences and fossils ignore the locks (Maxroll crafting
+    resources, read 2026-11-26), so they pass keep_locked=False."""
     v = ItemView(gd, item)
-    kept = tuple(mi for mi in item.explicits if v.is_protected(mi)) + forced
+    kept = tuple(mi for mi in item.explicits if (v.is_protected(mi) if keep_locked else mi.fractured)) + forced
     base_item = item.with_(rarity="rare", explicits=kept)
     return fill_to(gd, base_item, count or _count_from(rng, _rare_count_name(v)), rng, weight_fn)
 
@@ -192,7 +196,7 @@ def essence(gd, item, rng, *, essence_name: str, **_):
     _require(item.rarity == "normal" or (item.rarity == "rare" and can_reforge),
              "this essence needs a normal item (Shrieking/Deafening also work on rares)")
     forced = (_instance(gd.mods[mod_id], rng),)
-    return _reforge_rare(gd, item.with_(explicits=()) if item.rarity == "normal" else item, rng, forced)
+    return _reforge_rare(gd, item.with_(explicits=()) if item.rarity == "normal" else item, rng, forced, keep_locked=False)
 
 
 def fossil_weight_fn(gd: GameData, fossil_names: list[str]) -> WeightFn:
@@ -217,7 +221,7 @@ def fossil(gd, item, rng, *, fossil_names: list[str], **_):
     _common_checks(v)
     _require(1 <= len(fossil_names) <= 4, "a resonator holds 1 to 4 fossils")
     _require(item.rarity in ("normal", "rare"), "fossils need a normal or rare item")
-    return _reforge_rare(gd, item, rng, weight_fn=fossil_weight_fn(gd, fossil_names))
+    return _reforge_rare(gd, item, rng, weight_fn=fossil_weight_fn(gd, fossil_names), keep_locked=False)
 
 
 def bench_craft(gd, item, rng, *, mod_id: str, **_):

@@ -9,7 +9,7 @@
       "category": "core",
       "status": "implemented_verified",
       "engine_action": null,
-      "notes": "Cross-checked 2026-11-26 against Craft of Exile's data (scripts/compare_craftofexile.py): 10 bases x item level 30/68/86 = 30 reference cases; 29 identical tier by tier (presence, required level, weight). Only difference: wand local mana leech (CoE 1000, ours 500 = spawn 1000 x the data's 50% wand generation weight, which CoE applies to the matching life-leech mod but not to mana leech). CoE also rounds 12.5 weights down to 12 (<0.01% effect). Influence pools not yet cross-checked."
+      "notes": "Cross-checked 2026-11-26 against Craft of Exile's data (scripts/compare_craftofexile.py): 10 bases x item level 30/68/86 = 30 reference cases; 29 identical tier by tier (presence, required level, weight). Only difference: wand local mana leech (CoE 1000, ours 500 = spawn 1000 x the data's 50% wand generation weight, which CoE applies to the matching life-leech mod but not to mana leech). CoE also rounds 12.5 weights down to 12 (<0.01% effect). Influence pools not yet cross-checked. Extended 2026-11-26 to influence pools: 9 bases x 6 influences; 53/54 identical, the one difference (Hunter wand mod, CoE 200 vs ours 100) is the same CoE wand generation-weight quirk. Total 62/64 cases identical at item level 86."
     },
     {
       "id": "recipe.multistep",
@@ -130,7 +130,7 @@
       "category": "essence",
       "status": "implemented_partially_verified",
       "engine_action": "essence",
-      "notes": "Forced mod + rare reforge from game data. 3.30: new Essence of Trickery; Weeping/Wailing essences no longer spawn on monsters in yellow/red maps (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). 'Shrieking/Deafening can reforge rares' still to be confirmed in game."
+      "notes": "Forced mod + rare reforge from game data. 3.30: new Essence of Trickery; Weeping/Wailing essences no longer spawn on monsters in yellow/red maps (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). 'Shrieking/Deafening can reforge rares' still to be confirmed in game. Essences ignore prefix/suffix locks (only fractured mods stay), per Maxroll crafting resources (read 2026-11-26)."
     },
     {
       "id": "essence.corruption_only",
@@ -151,7 +151,7 @@
       "category": "fossil",
       "status": "experimental",
       "engine_action": "fossil",
-      "notes": "Weight multipliers by mod tag. Not yet modelled: added/forced mods (Glyphic, Tangled...), mirrored, sockets, quality, corrupted essence chance, 'lucky' rolls."
+      "notes": "Weight multipliers by mod tag. Not yet modelled: added/forced mods (Glyphic, Tangled...), mirrored, sockets, quality, corrupted essence chance, 'lucky' rolls. Fossils ignore prefix/suffix locks (only fractured mods stay), per Maxroll crafting resources (read 2026-11-26)."
     },
     {
       "id": "bench.add_mod",
@@ -214,7 +214,7 @@
       "name": "Harvest (Horticrafting) crafts",
       "category": "harvest",
       "status": "experimental",
-      "notes": "IMPLEMENTED (experimental, 2026-11-26): tag reforges (harvest_reforge: one mod with the tag is rolled first, then the item is filled like a Chaos Orb) and add-tagged/remove-random (harvest_add_remove); costs from knowledge/harvest_crafts.json. Rolling order is the common understanding, not a published rule. Also implemented: 'more likely the same modifier types' (harvest_reforge_same, using the x90 multiplier and never-fewer-mods rule from an outdated 2020 report: assumptions.json) and fire/cold/lightning resistance or damage swaps to the same tier number (harvest_swap; 'similar tier' interpreted as same tier number). NOT yet: 'less likely' (unquantified), influence reforges, enchants. 3.30: Harvest is Sacred Flora inside maps (no subarea); lifeforce Wild/Vivid/Primal (+Sacred, + Crystallised Rancour for some).",
+      "notes": "IMPLEMENTED (experimental, 2026-11-26): tag reforges (harvest_reforge: one mod with the tag is rolled first, then the item is filled like a Chaos Orb) and add-tagged/remove-random (harvest_add_remove); costs from knowledge/harvest_crafts.json. Rolling order is the common understanding, not a published rule. Also implemented: 'more likely the same modifier types' (harvest_reforge_same, using the x90 multiplier and never-fewer-mods rule from an outdated 2020 report: assumptions.json) and fire/cold/lightning resistance or damage swaps to the same tier number (harvest_swap; 'similar tier' interpreted as same tier number). NOT yet: 'less likely' (unquantified), influence reforges, enchants. 3.30: Harvest is Sacred Flora inside maps (no subarea); lifeforce Wild/Vivid/Primal (+Sacred, + Crystallised Rancour for some). CONFLICT: 'more likely' strength is x90 per Craft of Exile (second-hand, 2020) vs '10x' per Maxroll (unsourced); engine uses x90 flagged as outdated.",
       "engine_action": "harvest_reforge, harvest_add_remove, harvest_reforge_same, harvest_swap"
     },
     {
@@ -238,7 +238,7 @@
       "name": "Recombinators",
       "category": "recombinator",
       "status": "discovered_not_implemented",
-      "notes": "Exists in 3.30 (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)): result takes the item level of the selected input base; cannot be used on corrupted items; with 1-3 total prefixes or suffixes the result gets fewer on average; mods illegal on the new base are ignored. Exact outcome probabilities are not published."
+      "notes": "Exists in 3.30 (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)): result takes the item level of the selected input base; cannot be used on corrupted items; with 1-3 total prefixes or suffixes the result gets fewer on average; mods illegal on the new base are ignored. Exact outcome probabilities are not published. Community odds exist but DISAGREE: aoeah 3.29 guide ('Butsicles' research'): pool 1: 59/41, 2: 67/33, 3: 40/50/10, 4: 10/60/30, 5: 43/57, 6: 30/70; poedb: 66.6/33.3, 66.6/33.3, 30/50/20, 10/55/35, 50/50, 30/70. 3.30 changed pools of 1-3 again. Exclusive mods: at most one survives. See docs/RESOURCES.md."
     },
     {
       "id": "synthesis",
@@ -251,14 +251,14 @@
       "name": "Conqueror exalts / Awakener's Orb / Orb of Dominance / Maven's Orb",
       "category": "influence",
       "status": "discovered_not_implemented",
-      "notes": "Influence tags already widen the mod pool correctly; the currencies that add influence are not modelled."
+      "notes": "Influence tags already widen the mod pool correctly; the currencies that add influence are not modelled. Rules (Maxroll, Craft of Exile basics): conqueror exalts add an influenced mod to uninfluenced items; Awakener's Orb keeps up to one influenced mod from each item and rerolls the rest like a Chaos Orb; Orb of Dominance removes one influenced mod and upgrades another ('50/50'). Influence pools themselves are verified against Craft of Exile."
     },
     {
       "id": "eldritch.implicits",
       "name": "Eldritch implicits, Ichors, Embers, Eldritch Chaos/Exalt/Annul",
       "category": "eldritch",
       "status": "discovered_not_implemented",
-      "notes": "Searing Exarch / Eater of Worlds implicit mods are in the 3.30 game data (generation types searing_exarch_implicit / eater_of_worlds_implicit). 3.30 notes change only altar drop rewards (Threads), not the crafting itself."
+      "notes": "Searing Exarch / Eater of Worlds implicit mods are in the 3.30 game data (generation types searing_exarch_implicit / eater_of_worlds_implicit). 3.30 notes change only altar drop rewards (Threads), not the crafting itself. Rules (Maxroll crafting resources and Eldritch guide, read 2026-11-26): six tiers Lesser..Perfect; Embers (Exarch) and Ichors (Eater) reach Exceptional; Orb of Conflict upgrades one implicit and downgrades the other (50/50 at equal tiers, lower tier more likely to upgrade); dominance decides whether Eldritch Chaos/Exalted/Annulment act on prefixes (Exarch) or suffixes (Eater); not on Shaper/Elder/conqueror items. Tier weights are in the Craft of Exile data and RePoE."
     },
     {
       "id": "veiled.unveil",

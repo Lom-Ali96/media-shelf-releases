@@ -97,6 +97,19 @@ def test_prefix_lock_keeps_prefixes_through_chaos_and_scour(gd):
     assert out.explicits == (ModInstance("Life3"),) and out.rarity == "rare"
 
 
+def test_essences_and_fossils_ignore_locks_but_keep_fractured(gd):
+    rng = random.Random(4)
+    locked = ItemState(RING, 84, "rare", (ModInstance("Phys1"), ModInstance("XMasterItemGenerationCannotChangePrefixes", crafted=True)))
+    kept_by_essence = sum(ModInstance("Phys1") in apply(gd, locked, "essence", rng, essence_name="Deafening Essence of Test").explicits
+                          for _ in range(100))
+    kept_by_fossil = sum(ModInstance("Phys1") in apply(gd, locked, "fossil", rng, fossil_names=["Scorched Fossil"]).explicits
+                         for _ in range(100))
+    assert kept_by_essence < 100 and kept_by_fossil < 100  # the lock does not protect the prefix
+    fractured = ItemState(RING, 84, "rare", (ModInstance("Phys1", fractured=True),))
+    assert all(ModInstance("Phys1", fractured=True) in apply(gd, fractured, "fossil", rng, fossil_names=["Scorched Fossil"]).explicits
+               for _ in range(30))
+
+
 def test_partial_lock_is_refused_not_guessed(gd):
     item = ItemState(RING, 84, "rare", (ModInstance("XMasterItemGenerationCannotChangeOnePrefixes", crafted=True),))
     with pytest.raises(UnsupportedMechanic):

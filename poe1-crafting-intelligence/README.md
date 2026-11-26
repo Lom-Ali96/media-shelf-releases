@@ -32,6 +32,7 @@ Other docs:
 - [API_INTEGRATIONS](docs/API_INTEGRATIONS.md)
 - [CRAFTING_RULES](docs/CRAFTING_RULES.md)
 - [CRAFTING_COVERAGE](docs/CRAFTING_COVERAGE.md)
+- [RESOURCES](docs/RESOURCES.md): where crafting knowledge comes from, how reliable each source is, open questions
 - [MECHANICS_3_30](docs/MECHANICS_3_30.md): what exists in 3.30 and the build order for missing mechanics
 - [PROBABILITY_MODELS](docs/PROBABILITY_MODELS.md)
 - [COMMUNITY_RESEARCH](docs/COMMUNITY_RESEARCH.md)
