@@ -26,6 +26,13 @@ def test_pool_sums_to_one_for_many_bases(real_gd):
         assert abs(sum(e.probability for e in pool) - 1) < 1e-9, name
 
 
+def test_royale_mods_never_roll(real_gd):
+    for name in ["Spine Bow", "Two-Toned Boots", "Stygian Vise"]:
+        b = real_gd.bases_by_name[name]
+        pool = eligible_pool(real_gd, ItemState(b.id, 86, "rare"))
+        assert not [e.mod.id for e in pool if "Royale" in e.mod.id], name
+
+
 def test_influence_widens_pool(real_gd):
     b = real_gd.bases_by_name["Hubris Circlet"]
     plain = len(eligible_pool(real_gd, ItemState(b.id, 86, "rare")))

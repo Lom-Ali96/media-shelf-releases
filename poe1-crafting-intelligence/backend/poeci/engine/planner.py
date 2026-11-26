@@ -181,7 +181,41 @@ def plan_routes(gd: GameData, base_id: str, item_level: int, wants: list[Want], 
         how = "" if reforges_rare else " (Orb of Scouring before each one)"
         add({}, res, f"Essence spam: {ename}", [f"{ename} until the other wanted mods appear{how}"], ["essence"])
 
-    # 3. Alteration for up to 1 prefix + 1 suffix, Regal, then Exalted Orbs.
+    # 3. Fossil spam (EXPERIMENTAL like the fossil action): simple fossils only (tag weights,
+    #    no forced/added mods), never one that blocks a wanted mod. One route per helpful
+    #    fossil, plus one with all helpful fossils together (max 4, one resonator socket each).
+    pool_rare = {e.mod.type: e.mod for e in eligible_pool(gd, normal.with_(rarity="rare"))}
+    wanted_tags = [set(pool_rare[w.mod_type].implicit_tags) for w in rolled_wants if w.mod_type in pool_rare]
+    helpful: list[tuple[int, str]] = []
+    for fname, (_, fos) in gd.fossils_by_name.items():
+        if fos.get("added_mods") or fos.get("forced_mods") or fos.get("allowed_tags") or fos.get("forbidden_tags") \
+                or fos.get("rolls_lucky") or fos.get("corrupted_essence_chance") or fos.get("sell_price_mods"):
+            continue
+        boost = {e["tag"] for e in fos.get("positive_mod_weights") or [] if e["weight"] > 100}
+        block = {e["tag"] for e in fos.get("negative_mod_weights") or [] if e["weight"] == 0}
+        if any(t & block for t in wanted_tags):
+            continue
+        hits = sum(1 for t in wanted_tags if t & boost)
+        if hits:
+            helpful.append((hits, fname))
+    helpful.sort(reverse=True)
+    combos = [[f] for _, f in helpful[:3]]
+    if len(helpful) > 1:
+        combos.append([f for _, f in helpful[:4]])
+    resonators = {1: "Primitive Chaotic Resonator", 2: "Potent Chaotic Resonator",
+                  3: "Powerful Chaotic Resonator", 4: "Prime Chaotic Resonator"}
+    for combo in combos:
+        per = {f: 1 for f in combo}
+        per[resonators[len(combo)]] = 1
+
+        def fos_try(r, _deadline, combo=combo, per=per):
+            return _ready(gd, apply(gd, normal, "fossil", r, fossil_names=combo), rolled, bench), per
+
+        add({}, _run(fos_try, budget_s, max_successes, rng), f"Fossil spam: {' + '.join(combo)} (experimental)",
+            [f"{resonators[len(combo)]} with {', '.join(combo)} until the wanted mods appear"], ["fossil"],
+            notes=["Fossil weighting is experimental (not yet checked against Craft of Exile)."])
+
+    # 4. Alteration for up to 1 prefix + 1 suffix, Regal, then Exalted Orbs.
     pool = {e.mod.type: e for e in eligible_pool(gd, normal.with_(rarity="magic"))}
     magic: dict[str, Want] = {}
     for w in sorted(rolled_wants, key=lambda w: pool[w.mod_type].probability if w.mod_type in pool else 1):

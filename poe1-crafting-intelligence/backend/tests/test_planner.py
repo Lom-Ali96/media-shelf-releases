@@ -25,6 +25,14 @@ def test_routes_cost_and_bench_finish(gd):
     assert not any("Whispering" in n for n in routes)
 
 
+def test_fossil_routes_boost_and_never_block(gd):
+    # Test data: Scorched Fossil boosts "fire" and blocks "cold".
+    fire = [r.name for r in plan_routes(gd, RING, 84, [Want("FireResistance", 2)], budget_s=0.1)]
+    assert "Fossil spam: Scorched Fossil (experimental)" in fire
+    cold = [r.name for r in plan_routes(gd, RING, 84, [Want("ColdResistance")], budget_s=0.1)]
+    assert not any(n.startswith("Fossil") for n in cold)
+
+
 def test_impossible_target_reports_a_minimum(gd):
     # ShaperCrit needs Shaper influence: on a plain ring it can never roll.
     routes = plan_routes(gd, RING, 84, [Want("CritShaper")], budget_s=0.1)

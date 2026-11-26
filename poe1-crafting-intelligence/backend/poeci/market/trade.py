@@ -64,16 +64,24 @@ def _first_number(line: str) -> float | None:
     return float(m.group(0)) if m else None
 
 
-def stat_filters(gd: GameData, item: ItemState, wants: list, explicit: dict[str, str]) -> tuple[list[dict], list[str]]:
-    """Trade filters for the wanted (non-bench) mods. A single-value line gets a
-    minimum from the worst accepted tier; 'Adds # to #' lines get no minimum
-    (how the site combines the two values is not verified)."""
+_ELEMENTAL = re.compile(r"^local_(minimum|maximum)_added_(fire|cold|lightning)_damage$")
+
+
+def stat_filters(gd: GameData, item: ItemState, wants: list, explicit: dict[str, str]) -> tuple[list[dict], list[str], float | None]:
+    """Trade filters for the wanted (non-bench) mods, plus a minimum Elemental DPS.
+
+    A single-value line gets a minimum from the worst accepted tier. 'Adds # to #'
+    lines get no stat minimum (how the site combines the two values is not
+    verified); for weapon fire/cold/lightning mods the lowest possible damage is
+    instead turned into a minimum Elemental DPS (lowest rolls x base attacks per
+    second: attack speed mods can only raise it, so it never hides a match)."""
     view = ItemView(gd, item)
     tags = view.tags()
     by_type = {}
     for e in eligible_pool(gd, item.with_(rarity="rare", explicits=())):
         by_type.setdefault(e.mod.type, e.mod)
     filters, notes = [], []
+    edps = 0.0
     for w in wants:
         if w.bench:
             notes.append(f"{w.mod_type}: left out, you craft it on the bench.")
@@ -85,6 +93,9 @@ def stat_filters(gd: GameData, item: ItemState, wants: list, explicit: dict[str,
         family = [gd.mods[i] for i in _tier_family(gd, view.base, mod, frozenset(tags))]
         worst = family[min(w.max_tier, len(family)) - 1] if family else mod
         local = any(s.startswith("local_") for s, _, _ in mod.stats)
+        elemental = [lo for s, lo, _ in worst.stats if _ELEMENTAL.match(s)]
+        if view.base.attack_time_ms and len(elemental) == 2:
+            edps += sum(elemental) / 2 * 1000 / view.base.attack_time_ms
         for line in worst.text.split("\n"):
             pat = _pattern(line)
             negative = " reduced " in f" {pat} "
@@ -97,13 +108,15 @@ def stat_filters(gd: GameData, item: ItemState, wants: list, explicit: dict[str,
             f = {"id": tid}
             if pat.count("#") == 1 and (n := _first_number(line)) is not None:
                 f["value"] = {"max": -n} if negative else {"min": n}  # 'reduced' values are negative on the site
-            elif pat.count("#") > 1:
+            elif pat.count("#") > 1 and len(elemental) != 2:
                 notes.append(f"{w.mod_type}: filter without minimum (two-value mod).")
             filters.append(f)
-    return filters, notes
+    if edps:
+        notes.append(f"Elemental DPS at least {edps:.0f} (lowest rolls of your accepted tiers, base attack speed).")
+    return filters, notes, round(edps, 1) or None
 
 
-def search_url(league: str, base_name: str, filters: list[dict]) -> str:
+def search_url(league: str, base_name: str, filters: list[dict], min_edps: float | None = None) -> str:
     query = {
         "query": {
             "status": {"option": "online"},
@@ -113,4 +126,6 @@ def search_url(league: str, base_name: str, filters: list[dict]) -> str:
         },
         "sort": {"price": "asc"},
     }
+    if min_edps:
+        query["query"]["filters"]["weapon_filters"] = {"filters": {"edps": {"min": min_edps}}}
     return SEARCH_URL.format(league=quote(league), query=quote(json.dumps(query, separators=(",", ":"))))

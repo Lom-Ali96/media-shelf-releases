@@ -25,7 +25,8 @@ def test_pattern_and_reduced():
 def test_stat_filters_use_worst_accepted_tier(gd):
     item = ItemState(RING, 84)
     wants = [Want("IncreasedLife", 2), Want("FireResistance", 1), Want("ColdResistance", bench=True), Want("CritShaper")]
-    filters, notes = trade.stat_filters(gd, item, wants, EXPLICIT)
+    filters, notes, min_edps = trade.stat_filters(gd, item, wants, EXPLICIT)
+    assert min_edps is None  # rings have no attack time
     # Life T2 on an ilvl 84 ring is "Robust" +(40-49): minimum 40. Fire T1 is +(42-45)%.
     assert {"id": "explicit.life", "value": {"min": 40.0}} in filters
     assert {"id": "explicit.fire", "value": {"min": 42.0}} in filters
@@ -33,10 +34,11 @@ def test_stat_filters_use_worst_accepted_tier(gd):
 
 
 def test_search_url_round_trip():
-    url = trade.search_url("Covens", "Spine Bow", [{"id": "explicit.x", "value": {"min": 5}}])
+    url = trade.search_url("Covens", "Spine Bow", [{"id": "explicit.x", "value": {"min": 5}}], min_edps=200)
     assert url.startswith("https://www.pathofexile.com/trade/search/Covens?q=")
     q = json.loads(unquote(url.split("?q=", 1)[1]))
     assert q["query"]["type"] == "Spine Bow" and q["query"]["stats"][0]["filters"][0]["id"] == "explicit.x"
+    assert q["query"]["filters"]["weapon_filters"] == {"filters": {"edps": {"min": 200}}}
 
 
 def test_load_stats_caches_per_game_version(tmp_path, monkeypatch):

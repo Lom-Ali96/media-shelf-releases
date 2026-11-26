@@ -68,7 +68,7 @@ class SavePlanIn(PlanIn):
     best_cost_chaos: float | None = Field(None, ge=0)
 
 class FetchIn(BaseModel):
-    categories: list[str] = Field(default_factory=lambda: ["Currency", "Essence", "Fossil"])
+    categories: list[str] = Field(default_factory=lambda: ["Currency", "Essence", "Fossil", "Resonator"])
     force: bool = False
 
 class OverrideIn(BaseModel):
@@ -262,9 +262,9 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
         trade_url, trade_notes = None, []
         if lg:
             try:
-                filters, trade_notes = trade.stat_filters(g, ItemState(b.id, body.item_level, influences=infl), wants,
-                                                          trade.load_stats(g.version))
-                trade_url = trade.search_url(lg, b.name, filters)
+                filters, trade_notes, min_edps = trade.stat_filters(
+                    g, ItemState(b.id, body.item_level, influences=infl), wants, trade.load_stats(g.version))
+                trade_url = trade.search_url(lg, b.name, filters, min_edps)
             except Exception as e:  # noqa: BLE001 - the plan is still useful without a link
                 trade_notes = [f"No trade link: {e}"]
         key = _plan_key(body)

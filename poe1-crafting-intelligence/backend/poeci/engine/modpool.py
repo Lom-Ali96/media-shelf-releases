@@ -43,9 +43,14 @@ def eligible_pool(
     view.check_supported()
     tags = frozenset(view.tags())
     taken = view.groups()
-    open_types = [g for g in gen_types if view.open_slots(g) > 0]
+    open_types = tuple(g for g in gen_types if view.open_slots(g) > 0)
     no_attack = apply_metamods and view.cannot_roll_attack
     no_caster = apply_metamods and view.cannot_roll_caster
+    # The pool depends only on these inputs; simulations hit the same ones constantly.
+    key = (view.base.domain, tags, item.item_level, frozenset(taken), open_types, no_attack, no_caster)
+    cache = gd.__dict__.setdefault("_pool_cache", {}) if weight_fn is None else None
+    if cache is not None and key in cache:
+        return cache[key]
     entries: list[tuple[Mod, float]] = []
     for m, w in _candidates(gd, view.base.domain, tags, item.item_level):
         if m.generation_type not in open_types:
@@ -61,7 +66,12 @@ def eligible_pool(
         if w > 0:
             entries.append((m, w))
     total = sum(w for _, w in entries)
-    return [PoolEntry(m, w, w / total) for m, w in entries] if total else []
+    pool = [PoolEntry(m, w, w / total) for m, w in entries] if total else []
+    if cache is not None:
+        if len(cache) > 200_000:  # bound memory on very long runs
+            cache.clear()
+        cache[key] = pool
+    return pool
 
 
 def _candidates(gd: GameData, domain: str, tags: frozenset[str], ilvl: int) -> list[tuple[Mod, float]]:

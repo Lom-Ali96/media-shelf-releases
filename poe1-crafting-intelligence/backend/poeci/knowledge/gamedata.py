@@ -86,6 +86,7 @@ class Base:
     implicits: tuple[str, ...]
     drop_level: int
     release_state: str
+    attack_time_ms: int | None = None  # weapons only
 
     @property
     def craftable(self) -> bool:
@@ -107,6 +108,7 @@ class GameData:
                 implicits=tuple(v.get("implicits") or ()),
                 drop_level=int(v.get("drop_level") or 0),
                 release_state=v.get("release_state") or "",
+                attack_time_ms=(v.get("properties") or {}).get("attack_time"),
             )
             for k, v in raw["base_items.json"].items()
         }
@@ -143,7 +145,9 @@ class GameData:
     def affix_mods_by_domain(self) -> dict[str, list[Mod]]:
         out: dict[str, list[Mod]] = {}
         for m in self.mods.values():
-            if m.is_affix:
+            # Royale event-mode mods keep normal spawn weights in the data, but poedb lists them
+            # separately as "Royale Modifiers"; they do not roll on normal items (TODO.md, 2026-11-26).
+            if m.is_affix and "Royale" not in m.id:
                 out.setdefault(m.domain, []).append(m)
         return out
 
