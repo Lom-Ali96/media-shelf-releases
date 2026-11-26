@@ -248,7 +248,18 @@ $("parseGo").onclick = async () => {
       <p class="muted">Implicits: ${esc(r.implicits.join(" / ") || "none")}</p>
       <table><tr><th>Affix</th><th>Text</th><th>Mod type</th><th>Tier</th><th>Identification</th></tr>${rows}</table>
       ${r.valid_actions ? `<p><b>Actions you can use on this item:</b><br>${r.valid_actions.map(a => a.valid ? `<span class="pill ok">${esc(a.name)}</span>` : `<span class="pill no" title="${esc(a.reason)}">${esc(a.name)}</span>`).join(" ")}</p>` : ""}
-      ${r.base_name ? '<button class="primary" id="toPlan">Plan routes for this item</button>' : ""}`;
+      ${r.bench_options && r.bench_options.length ? `<details><summary><b>Bench crafts you can add now (${r.bench_options.length})</b></summary><table><tr><th>Affix</th><th>Craft</th><th>Cost</th><th class="num">Chaos</th></tr>` +
+        r.bench_options.map(o => `<tr><td class="${o.affix}">${o.affix}</td><td class="crafted">${esc(o.text).replace(/
+/g, "<br>")}</td><td class="muted">${esc(Object.entries(o.cost).map(([k, v]) => v + " × " + k).join(", "))}</td><td class="num">${o.chaos != null ? num(o.chaos, 1) : "–"}</td></tr>`).join("") + "</table></details>" : ""}
+      <div class="row" style="margin-top:8px">${r.base_name ? '<button class="primary" id="toPlan">Plan routes for this item</button> <button class="primary" id="toTrade">Find similar on trade ↗</button>' : ""}</div>
+      <div id="tradeOut" class="small"></div>`;
+    if (r.base_name) $("toTrade").onclick = async () => {
+      try {
+        const t = await api("/api/items/trade_link", {method: "POST", body: JSON.stringify({text: $("itemText").value})});
+        window.open(t.url, "_blank", "noopener");
+        $("tradeOut").innerHTML = t.notes.length ? `<ul class="warnings">${t.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : "";
+      } catch (e) { $("tradeOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+    };
     if (r.base_name) $("toPlan").onclick = () => {
       $("planBase").value = r.base_name; $("planIlvl").value = r.item_level ?? 84; $("planInfl").value = r.influences.join(", ");
       planWants = r.mods.filter(m => m.mod_type).map(m => ({mod_type: m.mod_type, text: m.text ?? m.lines.join(" / "), max_tier: m.tier || 99, bench: m.crafted, on: true}));

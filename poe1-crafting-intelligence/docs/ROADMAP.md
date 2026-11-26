@@ -42,7 +42,7 @@
 3. **P0:** Resolve placeholder assumptions (magic 1/2 mod split, rare jewel 3/4 split) with sourced data.
 4. **P1:** ~~Verify the poe.ninja adapter live~~ (done 2026-11-26); add a league picker sourced from `/poe1/api/data/index-state`; add divine/chaos toggle.
 5. **P1:** Multi-step recipes (a recipe = ordered steps with repeat-until/if conditions), executed by the simulator.
-6. **P1:** NumPy-vectorised reforge sampler (aiming for 10× speed).
+6. **P1:** NumPy-vectorised reforge sampler (aiming for 10× speed). A mod-pool cache already gave ~2–3× (2026-11-26).
 7. **P1:** Fossils: forced or added mods, Glyphic/Tangled specials; Harvest per 3.30 data.
 8. **P1:** React + TypeScript frontend shell with charts (cost distribution histogram).
 9. **P2:** Manual recipe import and validation (Phase 6 MVP).
@@ -52,7 +52,8 @@
 
 - ✅ **Route planner, stage A:** paste an item or choose wanted mods with a worst acceptable tier → standard methods ranked by expected cost, with steps (`engine/planner.py`). Next: more templates (fossils once verified, essence + exalt combos, multimod finishes), then the real pathfinder (P2 above).
 - ✅ **ROI:** trade-site search link with wanted mods pre-filled (opened by the user), manual sale price, profit/ROI per route, ROI board of saved crafts sorted by profit. Next: refresh saved costs on demand; show a bad-luck (90%) cost next to the expected cost.
-- ⬜ **Import gear from Path of Building codes** (covers poe.ninja character pages, which offer a PoB export). Screenshots are not planned: they don't show tiers and text recognition misreads numbers.
+- ✅ **Import gear from Path of Building codes** (covers poe.ninja character pages, which offer a PoB export). Screenshots are not planned: they don't show tiers and text recognition misreads numbers.
+- ✅ Fossil routes (experimental), eDPS minimum in trade links, bench crafts and "find similar" in the Item Analyzer, mod-pool cache, stress test (2026-11-26).
 
 ## Complexity estimate
 

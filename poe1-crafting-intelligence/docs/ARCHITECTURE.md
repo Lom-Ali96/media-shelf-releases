@@ -24,6 +24,7 @@ backend/poeci/
 │   ├── simulate.py            targets, exact one-step probability, Monte Carlo, Wilson CIs
 │   └── planner.py             route planner: standard methods ranked by expected cost
 ├── parsing/     clipboard.py  Ctrl+C / Ctrl+Alt+C item parser
+│                pob.py        Path of Building code -> equipped items as Ctrl+C text
 ├── market/      poeninja.py   Market Engine (adapter, cache, overrides, price lookup)
 ├── updates/     versions.py   Update Engine (patch gate, version checks)
 ├── storage/     db.py + migrations/*.sql   SQLite for user + market state

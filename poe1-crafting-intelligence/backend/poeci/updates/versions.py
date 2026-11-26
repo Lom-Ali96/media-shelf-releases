@@ -11,6 +11,11 @@ import sqlite3
 from datetime import datetime, timezone
 
 from ..knowledge import importer
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..storage import db
 from ..knowledge.coverage import load_registry
 
 ENGINE_VERSION = "0.1.0"
@@ -25,7 +30,7 @@ def _newer(a: str, b: str) -> bool:
     return importer._version_key(a) > importer._version_key(b)
 
 
-def record_check(conn: sqlite3.Connection, kind: str, value: str, source: str) -> None:
+def record_check(conn: "db.LockedConnection", kind: str, value: str, source: str) -> None:
     conn.execute(
         "INSERT INTO version_checks(checked_at, kind, value, source) VALUES (?, ?, ?, ?)",
         (datetime.now(timezone.utc).isoformat(), kind, value, source),
@@ -33,13 +38,13 @@ def record_check(conn: sqlite3.Connection, kind: str, value: str, source: str) -
     conn.commit()
 
 
-def last_check(conn: sqlite3.Connection, kind: str) -> sqlite3.Row | None:
+def last_check(conn: "db.LockedConnection", kind: str) -> sqlite3.Row | None:
     return conn.execute(
         "SELECT checked_at, value, source FROM version_checks WHERE kind = ? ORDER BY id DESC LIMIT 1", (kind,)
     ).fetchone()
 
 
-def check_remote(conn: sqlite3.Connection) -> str | None:
+def check_remote(conn: "db.LockedConnection") -> str | None:
     """Ask the RePoE export which game version it was generated from (one tiny
     text file). Returns None if offline; the failure is not fatal."""
     try:
@@ -50,7 +55,7 @@ def check_remote(conn: sqlite3.Connection) -> str | None:
     return v
 
 
-def status(conn: sqlite3.Connection, imported_version: str | None) -> dict:
+def status(conn: "db.LockedConnection", imported_version: str | None) -> dict:
     reg = load_registry()
     verified = reg["verified_for_patch"]
     remote = last_check(conn, "remote_game_data")

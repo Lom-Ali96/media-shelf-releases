@@ -74,3 +74,18 @@ def test_roi_board(gd, conn):
     assert rows[0]["profit_chaos"] == pytest.approx(30) and rows[0]["roi"] == pytest.approx(1.0)  # 60 - 20 - 10
     c.delete(f"/api/plans/{rows[0]['key']}")
     assert c.get("/api/plans").json() == []
+
+
+def test_analyzer_bench_options_and_trade_link(gd, conn, monkeypatch):
+    monkeypatch.setattr(trade, "load_stats", lambda version, client=None: EXPLICIT)
+    c = TestClient(create_app(gd, conn))
+    item = "Item Class: Rings\nRarity: Rare\nDoom Loop\nTest Ring\n--------\nItem Level: 84\n--------\n+45 to maximum Life\n+43% to Fire Resistance\n"
+    r = c.post("/api/items/parse", json={"text": item}).json()
+    texts = [o["text"] for o in r["bench_options"]]
+    assert "+(16-20)% to Cold Resistance" in texts  # open suffix, ColdResistance group free
+    assert c.post("/api/items/trade_link", json={"text": item}).status_code == 422  # no league yet
+    c.post("/api/settings", json={"league": "Covens"})
+    t = c.post("/api/items/trade_link", json={"text": item}).json()
+    q = json.loads(unquote(t["url"].split("?q=", 1)[1]))
+    ids = {f["id"] for f in q["query"]["stats"][0]["filters"]}
+    assert ids == {"explicit.life", "explicit.fire"}

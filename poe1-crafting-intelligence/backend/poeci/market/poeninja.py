@@ -24,6 +24,11 @@ import httpx
 
 from .. import config
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..storage import db
+
 # Stackable goods traded on the currency exchange vs. items priced from stash listings.
 EXCHANGE_CATEGORIES = {"Currency", "Fragment", "Essence", "Fossil", "Resonator", "Oil", "DeliriumOrb"}
 STASH_ITEM_CATEGORIES = {
@@ -74,7 +79,7 @@ def parse_overview(category: str, payload: dict) -> list[dict]:
 
 
 class PoeNinja:
-    def __init__(self, conn: sqlite3.Connection, client: httpx.Client | None = None):
+    def __init__(self, conn: "db.LockedConnection", client: httpx.Client | None = None):
         self.conn = conn
         self.client = client or httpx.Client(timeout=30, headers={"User-Agent": config.USER_AGENT})
 
@@ -124,7 +129,7 @@ class PoeNinja:
         return sid
 
 
-def price_of(conn: sqlite3.Connection, league: str, name: str) -> dict | None:
+def price_of(conn: "db.LockedConnection", league: str, name: str) -> dict | None:
     """Best known chaos price for `name`: manual override first, then newest snapshot."""
     o = conn.execute("SELECT chaos_value, updated_at, note FROM price_overrides WHERE league=? AND name=?", (league, name)).fetchone()
     if o:
@@ -143,7 +148,7 @@ def price_of(conn: sqlite3.Connection, league: str, name: str) -> dict | None:
             "source": row["source"], "as_of": row["fetched_at"], "is_listing_price": True}
 
 
-def set_override(conn: sqlite3.Connection, league: str, name: str, chaos_value: float, note: str | None = None) -> None:
+def set_override(conn: "db.LockedConnection", league: str, name: str, chaos_value: float, note: str | None = None) -> None:
     conn.execute(
         "INSERT INTO price_overrides(league, name, chaos_value, note, updated_at) VALUES (?,?,?,?,?) "
         "ON CONFLICT(league, name) DO UPDATE SET chaos_value=excluded.chaos_value, note=excluded.note, updated_at=excluded.updated_at",

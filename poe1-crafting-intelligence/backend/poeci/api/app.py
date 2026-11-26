@@ -187,7 +187,30 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
             resp["open_prefixes"] = view.open_slots("prefix")
             resp["open_suffixes"] = view.open_slots("suffix")
             resp["valid_actions"] = _valid_actions(g, state)
+            resp["bench_options"] = _bench_options(g, state, st.conn, league())
         return resp
+
+    @app.post("/api/items/trade_link")
+    def item_trade_link(body: ParseIn):
+        """Search link for items like this one: same base, its rolled mods at their tier or better."""
+        g = gd()
+        if not league():
+            raise HTTPException(422, "select a league first")
+        parsed = ItemParser(g).parse(body.text)
+        b = g.bases.get(parsed.base_id or "")
+        if b is None:
+            raise HTTPException(422, "base type not recognised")
+        wants = [Want(g.mods[m.mod_id].type, m.tier or 99, bench=m.crafted) for m in parsed.mods if m.mod_id]
+        try:
+            filters, notes, min_edps = trade.stat_filters(
+                g, ItemState(b.id, parsed.item_level or 1, influences=frozenset(parsed.influences)), wants,
+                trade.load_stats(g.version))
+        except Exception as e:  # noqa: BLE001 - shown to the user
+            raise HTTPException(502, f"No trade link: {e}")
+        skipped = sum(1 for m in parsed.mods if not m.mod_id)
+        if skipped:
+            notes.append(f"{skipped} mod(s) not identified exactly (ambiguous/unmatched) are left out.")
+        return {"url": trade.search_url(league(), b.name, filters, min_edps), "notes": notes}
 
     @app.post("/api/pob")
     def pob_import(body: PobIn):
@@ -383,6 +406,28 @@ def _plan_key(body: PlanIn) -> str:
     wants = sorted((w.mod_type, w.max_tier, w.bench) for w in body.wants)
     raw = json.dumps([body.base, body.item_level, sorted(i.lower() for i in body.influences), wants])
     return hashlib.sha1(raw.encode()).hexdigest()[:16]
+
+
+def _bench_options(g: GameData, item: ItemState, conn, lg: str) -> list[dict]:
+    """Bench crafts that fit this item right now (validated by the bench_craft action), with cost."""
+    import random
+
+    view = ItemView(g, item)
+    out, seen = [], set()
+    for o in g.bench_options:
+        mid = (o.get("actions") or {}).get("add_explicit_mod")
+        if mid not in g.mods or view.base.item_class not in o.get("item_classes", []) or g.mods[mid].text in seen:
+            continue
+        try:
+            ACTIONS["bench_craft"].fn(g, item, random.Random(0), mod_id=mid)
+        except (InvalidAction, UnsupportedMechanic):
+            continue
+        seen.add(g.mods[mid].text)
+        cost = {(g.bases[k].name if k in g.bases else k): v for k, v in (o.get("cost") or {}).items()}
+        prices = [poeninja.price_of(conn, lg, n) if lg else None for n in cost]
+        chaos = sum(v * p["chaos_value"] for v, p in zip(cost.values(), prices)) if all(prices) else None
+        out.append({"text": g.mods[mid].text, "affix": g.mods[mid].generation_type, "cost": cost, "chaos": chaos})
+    return sorted(out, key=lambda d: (d["affix"], d["text"]))
 
 
 def _valid_actions(g: GameData, item: ItemState) -> list[dict]:
