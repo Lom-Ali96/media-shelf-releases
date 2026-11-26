@@ -19,6 +19,7 @@ Run all tests:
 | `test_pob.py` | Path of Building codes: decoding, `{range}`/`{crafted}`/implicits, active item set, assumed item level, refused inputs (links, garbage, broken XML, decompression bomb) |
 | `test_realdata.py::test_mod_pools_match_craft_of_exile` | The 30 Craft of Exile reference cases (skipped until `data/craftofexile_poec_data.json` exists) |
 | `test_recipe.py` | Harvest/beast actions, recipe engine (until, check, goto, restart, validation), costs, Harvest and lock routes in the planner |
+| `test_recipes_api.py` | Step suggestions from text, recipe validation, simulate + compare, recipe library, collected ideas and their price groups |
 | `test_web.py` | The page's JavaScript has no syntax error (`node --check`; skipped without Node.js). Regression for the broken-tabs bug |
 | `test_storage.py` | The shared database connection under 16 threads (regression for the stress-test crash) |
 
@@ -34,7 +35,7 @@ Run all tests:
 
 **Promotion rule:** a mechanic moves to `implemented_verified` only after at least 3 reference cases agree with an independent source (Craft of Exile or a logged in-game test) within the Monte Carlo confidence interval. Those cases are then added as tests.
 
-M1 result: **31 passed** (including the real-data tests). Now: **65 passed**.
+M1 result: **31 passed** (including the real-data tests). Now: **71 passed**.
 
 ### Cross-check with Craft of Exile
 

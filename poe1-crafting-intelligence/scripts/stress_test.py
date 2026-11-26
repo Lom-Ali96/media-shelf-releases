@@ -50,6 +50,8 @@ for t in weird:
     call("POST", "/api/items/parse", json={"text": t})
     call("POST", "/api/items/trade_link", json={"text": t})
     call("POST", "/api/pob", json={"code": t})
+    call("POST", "/api/recipes/suggest", json={"text": t})
+    call("POST", "/api/ideas/collect", json={"text": t, "price_chaos": 10})
 for body in [{"base": "Spine Bow", "item_level": 0, "wants": [{"mod_type": "X"}]},
              {"base": "Spine Bow", "item_level": 85, "wants": []},
              {"base": "Spine Bow", "item_level": 85, "wants": [{"mod_type": "LocalLightningDamageTwoHand", "max_tier": -3}]},
@@ -64,6 +66,12 @@ for body in [{"base": "Spine Bow", "item_level": 0, "wants": [{"mod_type": "X"}]
 call("POST", "/api/plans", json={"base": "Spine Bow", "wants": [], "sale_chaos": 1e308, "best_cost_chaos": 1e308})
 call("POST", "/api/market/override", json={"name": "Chaos Orb", "chaos_value": -1})
 call("DELETE", "/api/plans/does-not-exist")
+call("POST", "/api/recipes/simulate", json={"base": "Spine Bow", "wants": [{"mod_type": "Nope"}], "steps": [{"action": "chaos", "repeat": "until_mods", "mods": ["X"]}]})
+call("POST", "/api/recipes/simulate", json={"base": "Spine Bow", "wants": [{"mod_type": "CriticalStrikeMultiplier"}], "steps": [{"action": "nope"}]})
+call("POST", "/api/recipes/simulate", json={"base": "Spine Bow", "wants": [{"mod_type": "CriticalStrikeMultiplier"}], "compare": False, "budget_s": 0.2,
+     "steps": [{"action": "alchemy"}, {"action": "chaos", "repeat": "until_wanted"}, {"action": "fracturing"}, {"action": "harvest_swap", "params": {"kind": "damage", "from_element": "fire", "to_element": "cold"}}]})
+call("DELETE", "/api/recipes/999999")
+call("DELETE", "/api/ideas/collected/999999")
 for params in [{"base": "Spine Bow", "ilvl": -1}, {"base": "Spine Bow", "ilvl": 10**9}, {"base": "x"}, {"base": "Spine Bow", "influences": ",,,"}]:
     call("GET", "/api/modpool", params=params)
 call("POST", "/api/simulate", json={"base": "Spine Bow", "action": "nope", "target": []})

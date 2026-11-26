@@ -14,14 +14,14 @@ from pydantic import BaseModel, Field
 from ..engine.actions import ACTIONS, InvalidAction
 from ..engine.item import ItemState, ItemView, UnsupportedMechanic, tier_index
 from ..engine.modpool import eligible_pool
-from ..engine.planner import BenchCraft, Want, plan_routes, worst_accepted_mods
-from ..engine.recipe import cost_of
+from ..engine.planner import BenchCraft, Want, plan_routes, simulate_recipe, worst_accepted_mods
+from ..engine.recipe import cost_of, recipe_from_json
 from ..engine.simulate import ModRequirement, Target, exact_next_mod_probability, simulate_repeat_until
 from ..knowledge import importer
 from ..knowledge.coverage import coverage_report
 from ..knowledge.gamedata import GameData
 from ..market import poeninja, trade
-from ..parsing import pob
+from ..parsing import pob, recipe_text
 from ..parsing.clipboard import ItemParser
 from ..storage import db
 from ..updates import versions
@@ -71,6 +71,38 @@ class PlanIn(BaseModel):
 
 class SavePlanIn(PlanIn):
     sale_chaos: float = Field(gt=0)
+    best_route: str | None = None
+    best_cost_chaos: float | None = Field(None, ge=0)
+
+class SuggestIn(BaseModel):
+    text: str = Field(max_length=50_000)
+    base: str | None = None
+
+class RecipeStepIn(BaseModel):
+    action: str
+    params: dict = Field(default_factory=dict)
+    repeat: str = "once"  # once | until_wanted | until_mods
+    mods: list[str] = Field(default_factory=list)
+
+class RecipeIn(BaseModel):
+    name: str = Field("My recipe", max_length=200)
+    base: str
+    item_level: int = Field(84, ge=1, le=100)
+    influences: list[str] = Field(default_factory=list)
+    wants: list[WantIn] = Field(min_length=1)
+    steps: list[RecipeStepIn] = Field(min_length=1, max_length=40)
+    source_url: str | None = Field(None, max_length=500)
+    source_text: str | None = Field(None, max_length=50_000)
+    compare: bool = True
+    budget_s: float = Field(2.0, ge=0.2, le=3.0)
+
+class CollectIn(BaseModel):
+    text: str = Field(max_length=20_000)
+    price_chaos: float | None = Field(None, gt=0)
+    name: str | None = Field(None, max_length=200)
+    source: str = Field("pasted", pattern="^(pasted|pob|manual)$")
+
+class IdeaResultIn(BaseModel):
     best_route: str | None = None
     best_cost_chaos: float | None = Field(None, ge=0)
 
@@ -290,26 +322,7 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
         except (InvalidAction, UnsupportedMechanic) as e:
             raise HTTPException(422, str(e))
         lg = league()
-        prices: dict[str, dict | None] = {}
-
-        def chaos_of(units: dict[str, float] | None) -> float | None:
-            if not units:
-                return None
-            for name in units:
-                if name not in prices:
-                    prices[name] = poeninja.price_of(st.conn, lg, name) if lg else None
-            if any(prices[n] is None for n in units):
-                return None
-            return sum(v * prices[n]["chaos_value"] for n, v in units.items())
-
-        out = []
-        for r in routes:
-            d = asdict(r)
-            d["expected_chaos"] = chaos_of(r.expected_units)
-            d["range_chaos"] = [chaos_of(u) for u in r.units_range] if r.units_range else None
-            d["at_least_chaos"] = chaos_of(r.at_least_units)
-            d["missing_prices"] = sorted(n for n in (r.expected_units or r.at_least_units or {}) if prices.get(n) is None)
-            out.append(d)
+        out = _price_routes(st.conn, lg, routes)
         out.sort(key=lambda d: (d["expected_chaos"] is None, d["expected_chaos"] or d["at_least_chaos"] or float("inf")))
         divine = poeninja.price_of(st.conn, lg, "Divine Orb") if lg else None
         base_price = poeninja.price_of(st.conn, lg, b.name) if lg else None
@@ -333,6 +346,150 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
                 "prices_as_of": versions.status(st.conn, g.version).get("latest_market_update"),
                 "trade_url": trade_url, "trade_notes": trade_notes, "saved_sale_chaos": saved["sale_chaos"] if saved else None,
                 "rules_verified_for_current_data": versions.status(st.conn, g.version)["rules_verified_for_current_data"]}
+
+    # ------------------------------------------------------------ community / saved recipes
+    def _base(name: str):
+        b = gd().bases_by_name.get(name) or gd().bases.get(name)
+        if b is None:
+            raise HTTPException(404, f"unknown base {name!r}")
+        return b
+
+    @app.post("/api/recipes/suggest")
+    def recipe_suggest(body: SuggestIn):
+        return recipe_text.suggest(gd(), body.text, body.base or None)
+
+    @app.get("/api/bench_options")
+    def bench_options(base: str):
+        g, b = gd(), _base(base)
+        out = []
+        for o in g.bench_options:
+            mid = (o.get("actions") or {}).get("add_explicit_mod")
+            # partial locks ('1/2 ... cannot be changed') are not modelled yet, so they are not offered
+            if mid in g.mods and b.item_class in o.get("item_classes", []) and not g.mods[mid].type.endswith("Count"):
+                m = g.mods[mid]
+                out.append({"mod_id": mid, "text": m.text, "affix": m.generation_type,
+                            "cost": cost_of(g, "bench_craft", {"mod_id": mid}, ItemState(b.id, 1))})
+        return sorted(out, key=lambda d: (d["affix"], d["text"]))
+
+    @app.post("/api/recipes/simulate")
+    def recipe_simulate(body: RecipeIn):
+        """Simulate a pasted/edited recipe and, optionally, the app's own best route for the same target."""
+        g, b = gd(), _base(body.base)
+        infl = frozenset(i.lower() for i in body.influences)
+        reqs = [ModRequirement(w.mod_type, w.max_tier) for w in body.wants]
+        try:
+            recipe = recipe_from_json(body.name, [s.model_dump() for s in body.steps], reqs)
+            route = simulate_recipe(g, ItemState(b.id, body.item_level, influences=infl), recipe, budget_s=body.budget_s)
+        except (InvalidAction, UnsupportedMechanic) as e:
+            raise HTTPException(422, str(e))
+        out = {"recipe": _price_routes(st.conn, league(), [route])[0], "app_best": None, "app_routes": 0}
+        if body.compare:
+            try:
+                routes = plan_routes(g, b.id, body.item_level, [Want(w.mod_type, w.max_tier, w.bench) for w in body.wants],
+                                     influences=infl, budget_s=body.budget_s)
+                priced = _price_routes(st.conn, league(), routes)
+                priced.sort(key=lambda d: (d["expected_chaos"] is None, d["expected_chaos"] or d["at_least_chaos"] or float("inf")))
+                out.update(app_best=priced[0] if priced else None, app_routes=len(priced))
+            except (InvalidAction, UnsupportedMechanic) as e:
+                out["compare_error"] = str(e)
+        divine = poeninja.price_of(st.conn, league(), "Divine Orb") if league() else None
+        out["divine_chaos"] = divine["chaos_value"] if divine else None
+        return out
+
+    @app.post("/api/recipes")
+    def recipe_save(body: RecipeIn):
+        _base(body.base)
+        cur = st.conn.execute(
+            "INSERT INTO saved_recipes(name, source_url, source_text, base, item_level, influences, wants, steps, created_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            (body.name, body.source_url, body.source_text, body.base, body.item_level, json.dumps(body.influences),
+             json.dumps([w.model_dump() for w in body.wants]), json.dumps([s.model_dump() for s in body.steps]),
+             datetime.now(timezone.utc).isoformat(timespec="seconds")))
+        st.conn.commit()
+        return {"id": cur.lastrowid}
+
+    @app.get("/api/recipes")
+    def recipe_list(base: str | None = None):
+        rows = st.conn.execute("SELECT * FROM saved_recipes WHERE (? IS NULL OR base = ?) ORDER BY id DESC", (base, base))
+        out = []
+        for r in rows:
+            d = dict(r)
+            for k in ("influences", "wants", "steps"):
+                d[k] = json.loads(d[k])
+            out.append(d)
+        return out
+
+    @app.delete("/api/recipes/{rid}")
+    def recipe_delete(rid: int):
+        st.conn.execute("DELETE FROM saved_recipes WHERE id = ?", (rid,))
+        st.conn.commit()
+        return {"deleted": rid}
+
+    # ------------------------------------------------------------ collected craft ideas
+    @app.post("/api/ideas/collect")
+    def idea_collect(body: CollectIn):
+        """Turn a pasted/imported item into a craft idea: its base, item level and identified mods
+        at the item's own tiers (crafted mods become bench crafts)."""
+        g = gd()
+        if not league():
+            raise HTTPException(422, "select a league first")
+        parsed = ItemParser(g).parse(body.text)
+        b = g.bases.get(parsed.base_id or "")
+        if b is None or parsed.rarity == "Unique":
+            raise HTTPException(422, "need a magic or rare item with a known base type")
+        tags = ItemView(g, ItemState(b.id, parsed.item_level or 1, influences=frozenset(parsed.influences))).tags()
+        wants, seen = [], set()
+        for m in parsed.mods:
+            if not m.mod_id or g.mods[m.mod_id].type in seen:
+                continue
+            mod = g.mods[m.mod_id]
+            seen.add(mod.type)
+            tier = m.tier or tier_index(g, b, mod, tags)[0] or 99
+            wants.append({"mod_type": mod.type, "max_tier": tier, "bench": m.crafted, "text": mod.text})
+        if not wants:
+            raise HTTPException(422, "no modifier could be identified exactly (try Ctrl+Alt+C)")
+        skipped = sum(1 for m in parsed.mods if not m.mod_id)
+        cur = st.conn.execute(
+            "INSERT INTO saved_ideas(league, name, base, item_level, influences, wants, price_chaos, source, created_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            (league(), body.name or parsed.name or b.name, b.name, parsed.item_level or 84, json.dumps(parsed.influences),
+             json.dumps(wants), body.price_chaos, body.source, datetime.now(timezone.utc).isoformat(timespec="seconds")))
+        st.conn.commit()
+        return {"id": cur.lastrowid, "wants": len(wants), "skipped_mods": skipped}
+
+    @app.get("/api/ideas/collected")
+    def ideas_collected():
+        """Collected ideas for the current league in three price groups (by the Divine Orb price)."""
+        lg = league()
+        divine = poeninja.price_of(st.conn, lg, "Divine Orb") if lg else None
+        div = divine["chaos_value"] if divine else None
+        groups = {"under_10_div": [], "10_to_100_div": [], "over_100_div": [], "no_price": []}
+        for r in st.conn.execute("SELECT * FROM saved_ideas WHERE league = ? ORDER BY id DESC", (lg,)):
+            d = dict(r)
+            d["influences"], d["wants"] = json.loads(d["influences"]), json.loads(d["wants"])
+            cost = d["best_cost_chaos"]
+            d["profit_chaos"] = d["price_chaos"] - cost if (d["price_chaos"] and cost is not None) else None
+            if not d["price_chaos"] or not div:
+                groups["no_price"].append(d)
+            else:
+                in_div = d["price_chaos"] / div
+                groups["under_10_div" if in_div < 10 else "10_to_100_div" if in_div <= 100 else "over_100_div"].append(d)
+        for g_ in groups.values():
+            g_.sort(key=lambda d: (d["profit_chaos"] is None, -(d["profit_chaos"] or 0)))
+        return {"divine_chaos": div, "groups": groups}
+
+    @app.post("/api/ideas/collected/{iid}/result")
+    def idea_result(iid: int, body: IdeaResultIn):
+        st.conn.execute("UPDATE saved_ideas SET best_route = ?, best_cost_chaos = ? WHERE id = ?",
+                        (body.best_route, body.best_cost_chaos, iid))
+        st.conn.commit()
+        return {"id": iid}
+
+    @app.delete("/api/ideas/collected/{iid}")
+    def idea_delete(iid: int):
+        st.conn.execute("DELETE FROM saved_ideas WHERE id = ?", (iid,))
+        st.conn.commit()
+        return {"deleted": iid}
 
     @app.get("/api/ideas")
     def ideas():
@@ -431,6 +588,31 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
         return p
 
     return app
+
+
+def _price_routes(conn, lg: str, routes: list) -> list[dict]:
+    """Route dataclasses -> dicts with chaos prices (expected, range, minimum) and missing price names."""
+    prices: dict[str, dict | None] = {}
+
+    def chaos_of(units: dict[str, float] | None) -> float | None:
+        if not units:
+            return None
+        for name in units:
+            if name not in prices:
+                prices[name] = poeninja.price_of(conn, lg, name) if lg else None
+        if any(prices[n] is None for n in units):
+            return None
+        return sum(v * prices[n]["chaos_value"] for n, v in units.items())
+
+    out = []
+    for r in routes:
+        d = asdict(r)
+        d["expected_chaos"] = chaos_of(r.expected_units)
+        d["range_chaos"] = [chaos_of(u) for u in r.units_range] if r.units_range else None
+        d["at_least_chaos"] = chaos_of(r.at_least_units)
+        d["missing_prices"] = sorted(n for n in (r.expected_units or r.at_least_units or {}) if prices.get(n) is None)
+        out.append(d)
+    return out
 
 
 def _plan_key(body: PlanIn) -> str:

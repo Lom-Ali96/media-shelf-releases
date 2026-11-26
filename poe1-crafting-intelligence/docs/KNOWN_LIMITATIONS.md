@@ -1,6 +1,8 @@
 # Known limitations (milestone 1)
 
 - Only the mod pools are verified (against Craft of Exile, 2026-11-26). Currency behaviour (e.g. how many mods a Chaos Orb rolls), essences, fossils and influence pools are not yet cross-checked (see TESTING.md).
+- Recipe suggestions from free text are keyword-based: they find the methods and their order, not conditions like "annul if bad" or which mods a repeat should stop on; always check the steps. Reading Reddit automatically is not built (Reddit's API terms need a registered app): paste the post text.
+- Collected ideas use the item's own tiers; accepting lower tiers makes the crafted item weaker than the priced one, so profit is optimistic.
 - Craft Ideas is a starter list, not a profit claim; its quick plans use 0.6 s per route (rougher numbers).
 - `magic_mod_count` (Transmutation/Alteration 1 vs 2 mods) and `rare_jewel_mod_count` are placeholder 50/50 assumptions.
 - Fossils are experimental: forced or added mods, special fossils, sockets and quality are not modelled.

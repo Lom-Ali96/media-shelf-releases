@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..knowledge.gamedata import GameData
-from .actions import ACTIONS, InvalidAction, apply
+from .actions import ACTIONS, InvalidAction, apply, missing_params
 from .item import ItemState, ItemView, UnsupportedMechanic
 from .simulate import ModRequirement, Target
 
@@ -157,6 +157,32 @@ def validate(recipe: Recipe) -> None:
     for n, s in enumerate(recipe.steps):
         if s.action not in ACTIONS:
             raise InvalidAction(f"step {n + 1}: unknown action {s.action!r}")
+        if missing := missing_params(s.action, s.params):
+            raise InvalidAction(f"step {n + 1} ({ACTIONS[s.action].name}): choose {', '.join(missing)}")
         if s.on_fail != "restart":
             if not s.on_fail.startswith("goto:") or not s.on_fail[5:].isdigit() or int(s.on_fail[5:]) >= len(recipe.steps):
                 raise InvalidAction(f"step {n + 1}: on_fail must be 'restart' or 'goto:<step index, starting at 0>'")
+
+
+def recipe_from_json(name: str, steps: list[dict], wants: list[ModRequirement]) -> Recipe:
+    """Steps as stored/edited in the UI: {action, params, repeat: once|until_wanted|until_mods,
+    mods: [mod types for until_mods]}. The target is every wanted mod."""
+    by_type = {w.mod_type: w for w in wants}
+    out = []
+    for n, s in enumerate(steps):
+        repeat = s.get("repeat", "once")
+        if repeat == "until_wanted":
+            until = Condition(all_of=tuple(wants))
+        elif repeat == "until_mods":
+            missing = [m for m in s.get("mods", []) if m not in by_type]
+            if missing or not s.get("mods"):
+                raise InvalidAction(f"step {n + 1}: 'until these mods' needs wanted mod types, got {missing or 'none'}")
+            until = Condition(all_of=tuple(by_type[m] for m in s["mods"]))
+        elif repeat == "once":
+            until = None
+        else:
+            raise InvalidAction(f"step {n + 1}: unknown repeat {repeat!r}")
+        out.append(Step(s["action"], dict(s.get("params") or {}), until=until))
+    recipe = Recipe(name, tuple(out), Condition(all_of=tuple(wants)))
+    validate(recipe)
+    return recipe

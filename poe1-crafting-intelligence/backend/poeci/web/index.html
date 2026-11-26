@@ -57,6 +57,7 @@
     <button data-s="analyzer">Item Analyzer</button>
     <button data-s="plan">Route Planner</button>
     <button data-s="ideas">Craft Ideas</button>
+    <button data-s="recipes">Recipes</button>
     <button data-s="sim">Simulator</button>
     <button data-s="coverage">Coverage</button>
     <button data-s="settings">Settings</button>
@@ -129,12 +130,64 @@
     <div class="card"><h2>Your crafts by profit (ROI board)</h2><div id="roiOut" class="small muted">Nothing saved yet.</div></div>
   </section>
 
+  <section id="recipes">
+    <div class="two">
+      <div class="card">
+        <h2>1. Paste a crafting post or guide</h2>
+        <div class="small muted">Copy the text of a Reddit post (or any guide or your own notes) and paste it here. The app suggests steps in the order the methods are mentioned; always check them in step 2.</div>
+        <textarea id="rxText" style="min-height:140px" placeholder="Bought an ilvl 86 base, spammed Deafening Essence of ... until ..., then bench crafted 'Prefixes cannot be changed', scoured, exalted ..."></textarea>
+        <div class="row" style="margin-top:8px">
+          <label>Source link (optional) <input id="rxUrl" size="34" placeholder="https://www.reddit.com/r/pathofexile/..."></label>
+          <label>&nbsp;<button class="primary" id="rxSuggest">Suggest steps</button></label>
+        </div>
+        <div id="rxNotes" class="small"></div>
+      </div>
+      <div class="card">
+        <h2>Saved recipes</h2>
+        <div class="row"><label>Base <input id="rxFilter" list="baseList" size="22" placeholder="all bases"></label>
+          <label>&nbsp;<button class="primary" id="rxFilterGo">Show</button></label></div>
+        <div id="rxLibrary" class="small muted scroll" style="max-height:300px">Nothing saved yet.</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>2. Check and edit the recipe</h2>
+      <div class="row">
+        <label>Name <input id="rxName" size="22" value="My recipe"></label>
+        <label>Base <input id="rxBase" list="baseList" size="22"></label>
+        <label>Item level <input id="rxIlvl" type="number" value="84" min="1" max="100" style="width:70px"></label>
+        <label>Influences <input id="rxInfl" size="14" placeholder="shaper, hunter"></label>
+      </div>
+      <div class="row">
+        <label>Wanted mods (ModType:worst tier, comma separated) <input id="rxWants" size="60" placeholder="LocalLightningDamageTwoHand:3, CriticalStrikeMultiplier:2"></label>
+        <label>&nbsp;<button id="rxFromPlan" title="Copy the wanted mods from the Route Planner">Use Route Planner mods</button></label>
+      </div>
+      <table id="rxSteps"></table>
+      <div class="row" style="margin-top:8px">
+        <button id="rxAdd">+ Add step</button>
+        <button class="primary" id="rxSim">Simulate and compare</button>
+        <button class="primary" id="rxSave">Save to library</button>
+        <span id="rxStatus" class="small muted"></span>
+      </div>
+    </div>
+    <div class="card"><h2>3. This recipe vs the app's best route</h2><div id="rxOut" class="small muted">Nothing simulated yet.</div></div>
+  </section>
+
   <section id="ideas">
     <div class="card">
       <h2>Craft ideas: what is worth crafting?</h2>
       <div class="small muted">A starter list of common craft targets (edit <code>backend/poeci/knowledge/craft_ideas.json</code> to change it). The app plans the cheapest route for each one. You check what the finished item sells for with the trade link, type the price, and the profit appears. Saved ideas go to the ROI board in the Route Planner.</div>
       <div class="row" style="margin-top:8px"><button class="primary" id="ideasGo">Plan all ideas</button><span id="ideasStatus" class="small muted"></span></div>
       <div class="scroll"><table id="ideasTable"></table></div>
+    </div>
+    <div class="card">
+      <h2>Your collected ideas (from items you found)</h2>
+      <div class="small muted">Add items with <b>Add to craft ideas</b> in the Item Analyzer (paste an item from the game or the trade site, with the price you saw) or <b>Add as idea</b> in the Path of Building import (e.g. gear of top players from poe.ninja). The target is the item's mods at its own tiers; let the planner accept lower tiers to make crafts realistic.</div>
+      <div class="row" style="margin-top:8px">
+        <label>Accept tiers lower <select id="colRelax"><option value="0">0 (exact)</option><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option></select></label>
+        <label>&nbsp;<button class="primary" id="colPlan">Plan all collected ideas</button></label>
+        <span id="colStatus" class="small muted"></span>
+      </div>
+      <div id="colOut" class="small muted">Nothing collected yet.</div>
     </div>
   </section>
 
@@ -226,8 +279,10 @@ async function loadStatus() {
 async function loadBases() {
   try { const bs = await api("/api/bases?limit=2000"); $("baseList").innerHTML = bs.map(b => `<option value="${esc(b.name)}">${esc(b.item_class)}</option>`).join(""); } catch {}
 }
+let actionsList = [];
 async function loadActions() {
   const as = await api("/api/actions");
+  actionsList = as;
   $("simAction").innerHTML = as.map(a => `<option value="${a.id}" ${a.id === "chaos" ? "selected" : ""}>${esc(a.name)}${a.status === "experimental" ? " (experimental)" : ""}</option>`).join("");
 }
 
@@ -263,7 +318,11 @@ $("parseGo").onclick = async () => {
       ${r.bench_options && r.bench_options.length ? `<details><summary><b>Bench crafts you can add now (${r.bench_options.length})</b></summary><table><tr><th>Affix</th><th>Craft</th><th>Cost</th><th class="num">Chaos</th></tr>` +
         r.bench_options.map(o => `<tr><td class="${o.affix}">${o.affix}</td><td class="crafted">${esc(o.text).replace(/\n/g, "<br>")}</td><td class="muted">${esc(Object.entries(o.cost).map(([k, v]) => v + " × " + k).join(", "))}</td><td class="num">${o.chaos != null ? num(o.chaos, 1) : "–"}</td></tr>`).join("") + "</table></details>" : ""}
       <div class="row" style="margin-top:8px">${r.base_name ? '<button class="primary" id="toPlan">Plan routes for this item</button> <button class="primary" id="toTrade">Find similar on trade ↗</button>' : ""}</div>
+      ${r.base_name && r.rarity !== "Unique" ? `<div class="row"><label>Price you saw (optional) <input id="ideaPrice" type="number" min="0" step="0.1" style="width:90px"></label>
+        <label>&nbsp;<select id="ideaUnit"><option value="c">chaos</option><option value="div">divine</option></select></label>
+        <label>&nbsp;<button class="primary" id="toIdea">Add to craft ideas</button></label><span id="ideaOut" class="small"></span></div>` : ""}
       <div id="tradeOut" class="small"></div>`;
+    if ($("toIdea")) $("toIdea").onclick = () => collectIdea($("itemText").value, $("ideaPrice").value, $("ideaUnit").value, "pasted", $("ideaOut"));
     if (r.base_name) $("toTrade").onclick = async () => {
       try {
         const t = await api("/api/items/trade_link", {method: "POST", body: JSON.stringify({text: $("itemText").value})});
@@ -287,9 +346,10 @@ $("pobGo").onclick = async () => {
       r.items.map((e, i) => `<tr><td>${esc(e.slot)}</td><td>${esc(e.name ?? "")} <span class="muted">${esc(e.base ?? "")}</span></td><td>${esc(e.rarity ?? "")}</td>
         <td>${e.item_level ?? "–"}${e.item_level_assumed ? ' <span class="warn" title="made in Path of Building: no item level, assumed">(assumed)</span>' : ""}</td>
         <td>${e.error ? `<span class="bad">${esc(e.error)}</span>` : e.rarity === "Unique" ? '<span class="muted">unique: not analysed</span>' : `${e.matched}/${e.mods}${e.ambiguous ? ` <span class="warn">(${e.ambiguous} ambiguous)</span>` : ""}`}</td>
-        <td>${e.text && e.rarity !== "Unique" ? `<button data-pob="${i}">Analyze</button>` : ""}</td></tr>`).join("") + "</table>" +
+        <td>${e.text && e.rarity !== "Unique" ? `<button data-pob="${i}">Analyze</button> <button data-pobidea="${i}">Add as idea</button>` : ""}</td></tr>`).join("") + "</table>" +
       '<p class="muted">PoB stores rolled values, not tiers: a value that fits two tiers is shown as ambiguous. Copy the real item with Ctrl+Alt+C for exact tiers.</p>';
     $("pobOut").querySelectorAll("[data-pob]").forEach(b => b.onclick = () => { $("itemText").value = r.items[+b.dataset.pob].text; $("parseGo").click(); window.scrollTo(0, 0); });
+    $("pobOut").querySelectorAll("[data-pobidea]").forEach(b => b.onclick = () => collectIdea(r.items[+b.dataset.pobidea].text, "", "c", "pob", b));
   } catch (e) { $("pobOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
 };
 
@@ -338,6 +398,191 @@ async function loadRoi() {
     });
   } catch (e) { $("roiOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
 }
+// ---------------------------------------------------------------- Recipes (community / saved)
+let rxSteps = [], benchOpts = {base: null, list: []};
+const PARAM_ACTIONS = {essence: "Essence name", fossil: "Fossils (comma)", harvest_reforge: "Tag (life, fire...)",
+  harvest_add_remove: "Tag (life, fire...)", harvest_swap: "resistance fire cold", bench_craft: "bench"};
+function paramText(s) {
+  const p = s.params || {};
+  if (s.action === "essence") return p.essence_name || "";
+  if (s.action === "fossil") return (p.fossil_names || []).join(", ");
+  if (s.action.startsWith("harvest_") && s.action !== "harvest_swap" && s.action !== "harvest_reforge_same") return p.tag || "";
+  if (s.action === "harvest_swap") return [p.kind, p.from_element, p.to_element].filter(Boolean).join(" ");
+  return "";
+}
+function setParam(s, text) {
+  text = text.trim();
+  if (s.action === "essence") s.params = {essence_name: text};
+  else if (s.action === "fossil") s.params = {fossil_names: text.split(",").map(x => x.trim()).filter(Boolean)};
+  else if (s.action === "harvest_swap") { const [kind, from_element, to_element] = text.toLowerCase().split(/\s+/); s.params = {kind, from_element, to_element}; }
+  else if (s.action.startsWith("harvest_") && s.action !== "harvest_reforge_same") s.params = {tag: text.toLowerCase()};
+}
+async function loadBenchOpts() {
+  const base = $("rxBase").value.trim();
+  if (!base || benchOpts.base === base) return;
+  try { benchOpts = {base, list: await api("/api/bench_options?" + new URLSearchParams({base}))}; } catch { benchOpts = {base, list: []}; }
+}
+function renderRx() {
+  const actionOpts = (sel) => actionsList.map(a => `<option value="${a.id}" ${a.id === sel ? "selected" : ""}>${esc(a.name)}</option>`).join("");
+  $("rxSteps").innerHTML = `<tr><th>#</th><th>Action</th><th>Details</th><th>Repeat</th><th>Found in text</th><th></th></tr>` +
+    rxSteps.map((s, i) => {
+      let detail = "";
+      if (s.action === "bench_craft") {
+        detail = `<select data-i="${i}" data-f="bench" style="max-width:320px"><option value="">choose a bench craft…</option>${benchOpts.list.map(o =>
+          `<option value="${esc(o.mod_id)}" ${o.mod_id === (s.params || {}).mod_id ? "selected" : ""}>${esc(o.affix)}: ${esc(o.text.split("\n").join(" / "))}</option>`).join("")}</select>`;
+      } else if (PARAM_ACTIONS[s.action]) {
+        detail = `<input data-i="${i}" data-f="param" size="26" placeholder="${esc(PARAM_ACTIONS[s.action])}" value="${esc(paramText(s))}">`;
+      }
+      return `<tr><td>${i + 1}</td><td><select data-i="${i}" data-f="action">${actionOpts(s.action)}</select></td><td>${detail}</td>
+        <td><select data-i="${i}" data-f="repeat"><option value="once" ${s.repeat === "once" ? "selected" : ""}>once</option>
+          <option value="until_wanted" ${s.repeat === "until_wanted" ? "selected" : ""}>until all wanted mods</option>
+          <option value="until_mods" ${s.repeat === "until_mods" ? "selected" : ""}>until these mods:</option></select>
+          ${s.repeat === "until_mods" ? `<input data-i="${i}" data-f="mods" size="24" placeholder="ModType, ModType" value="${esc((s.mods || []).join(", "))}">` : ""}</td>
+        <td class="muted">${esc(s.matched || "")}</td>
+        <td><button data-i="${i}" data-m="-1">↑</button><button data-i="${i}" data-m="1">↓</button><button data-i="${i}" data-m="0">✕</button></td></tr>`;
+    }).join("");
+  $("rxSteps").querySelectorAll("[data-f]").forEach(el => el.onchange = () => {
+    const s = rxSteps[+el.dataset.i];
+    if (el.dataset.f === "action") { s.action = el.value; s.params = {}; renderRx(); }
+    else if (el.dataset.f === "param") setParam(s, el.value);
+    else if (el.dataset.f === "bench") s.params = el.value ? {mod_id: el.value} : {};
+    else if (el.dataset.f === "repeat") { s.repeat = el.value; renderRx(); }
+    else if (el.dataset.f === "mods") s.mods = el.value.split(",").map(x => x.trim()).filter(Boolean);
+  });
+  $("rxSteps").querySelectorAll("[data-m]").forEach(b => b.onclick = () => {
+    const i = +b.dataset.i, m = +b.dataset.m;
+    if (m === 0) rxSteps.splice(i, 1);
+    else if (rxSteps[i + m]) [rxSteps[i], rxSteps[i + m]] = [rxSteps[i + m], rxSteps[i]];
+    renderRx();
+  });
+}
+const parseWants = (text) => text.split(",").map(x => x.trim()).filter(Boolean).map(x => { const [t, tier] = x.split(":"); return {mod_type: t.trim(), max_tier: tier ? +tier : 99}; });
+const rxBody = () => ({name: $("rxName").value || "My recipe", base: $("rxBase").value.trim(), item_level: +$("rxIlvl").value,
+  influences: $("rxInfl").value.split(",").map(x => x.trim()).filter(Boolean), wants: parseWants($("rxWants").value),
+  steps: rxSteps.map(({action, params, repeat, mods}) => ({action, params: params || {}, repeat, mods: mods || []})),
+  source_url: $("rxUrl").value || null, source_text: $("rxText").value || null});
+$("rxBase").onchange = async () => { await loadBenchOpts(); renderRx(); };
+$("rxSuggest").onclick = async () => {
+  try {
+    const r = await api("/api/recipes/suggest", {method: "POST", body: JSON.stringify({text: $("rxText").value, base: $("rxBase").value.trim() || null})});
+    if (r.base) $("rxBase").value = r.base;
+    const ilvl = $("rxText").value.match(/(?:ilvl|item level)\s*(\d{1,3})/i);
+    if (ilvl) $("rxIlvl").value = ilvl[1];
+    rxSteps = r.steps;
+    await loadBenchOpts(); renderRx();
+    $("rxNotes").innerHTML = (r.steps.length ? `<span class="good">${r.steps.length} steps suggested.</span> ` : '<span class="warn">No known crafting method found in the text.</span> ') +
+      (r.notes.length ? `<ul class="warnings">${r.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : "") +
+      '<span class="muted">Check each step: set the wanted mods, pick bench crafts, and choose what each repeat should stop on.</span>';
+  } catch (e) { $("rxNotes").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+};
+$("rxFromPlan").onclick = () => { $("rxWants").value = planWants.filter(w => w.on && !w.bench).map(w => `${w.mod_type}:${w.max_tier}`).join(", "); if (!$("rxBase").value) $("rxBase").value = $("planBase").value; };
+$("rxAdd").onclick = () => { rxSteps.push({action: "chaos", params: {}, repeat: "once", mods: []}); renderRx(); };
+function routeCard(title, d, divine) {
+  if (!d) return `<div class="card" style="background:var(--panel2)"><b>${esc(title)}</b><p class="muted">No result.</p></div>`;
+  const c = (x) => x == null ? null : `${num(x, 0)} c` + (divine ? ` <span class="muted">(${num(x / divine, 2)} div)</span>` : "");
+  const cost = d.successes ? (c(d.expected_chaos) ?? `<span class="muted">missing price: ${esc(d.missing_prices.join(", "))}</span>`)
+    : d.at_least_chaos != null ? `<span class="bad">more than ${c(d.at_least_chaos)}</span>` : '<span class="bad">not realistic</span>';
+  return `<div class="card" style="background:var(--panel2)"><b>${esc(title)}</b>: ${esc(d.name)}
+    <div style="font-size:16px;margin:6px 0">${cost}</div>
+    <ol>${d.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
+    <div class="muted">Chance per try ${pct(d.tries ? d.successes / d.tries : 0)}, ${num(d.tries, 0)} tries simulated.</div>
+    ${d.notes.length ? `<ul class="warnings">${d.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}</div>`;
+}
+$("rxSim").onclick = async () => {
+  $("rxOut").textContent = "Simulating this recipe and the app's routes… (about 20 s)";
+  try {
+    const r = await api("/api/recipes/simulate", {method: "POST", body: JSON.stringify({...rxBody(), compare: true})});
+    $("rxOut").innerHTML = `<div class="two">${routeCard("This recipe", r.recipe, r.divine_chaos)}${routeCard(`App's best of ${r.app_routes} routes`, r.app_best, r.divine_chaos)}</div>` +
+      (r.compare_error ? `<p class="warn">${esc(r.compare_error)}</p>` : "") +
+      '<p class="muted">Same simulation and prices for both. Base item not included. Methods the app does not model yet (see Coverage) can make a real route cheaper than shown.</p>';
+  } catch (e) { $("rxOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+};
+$("rxSave").onclick = async () => {
+  try { await api("/api/recipes", {method: "POST", body: JSON.stringify(rxBody())}); $("rxStatus").textContent = " Saved ✓"; loadRecipes(); }
+  catch (e) { $("rxStatus").innerHTML = ` <span class="bad">${esc(e.message)}</span>`; }
+};
+async function loadRecipes() {
+  try {
+    const base = $("rxFilter").value.trim();
+    const rows = await api("/api/recipes" + (base ? "?" + new URLSearchParams({base}) : ""));
+    $("rxLibrary").innerHTML = rows.length ? `<table><tr><th>Name</th><th>Base</th><th>Steps</th><th>Source</th><th></th></tr>` + rows.map(d =>
+      `<tr><td>${esc(d.name)}</td><td>${esc(d.base)} <span class="muted">ilvl ${d.item_level}</span></td><td>${d.steps.length}</td>
+       <td>${d.source_url ? `<a href="${esc(d.source_url)}" target="_blank" rel="noopener">link</a>` : '<span class="muted">–</span>'}</td>
+       <td><button data-open="${d.id}">Open</button> <button data-del="${d.id}">✕</button></td></tr>`).join("") + "</table>"
+      : (base ? `No saved recipe for ${esc(base)} yet.` : "Nothing saved yet.");
+    $("rxLibrary").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => { await api(`/api/recipes/${b.dataset.del}`, {method: "DELETE"}); loadRecipes(); });
+    $("rxLibrary").querySelectorAll("[data-open]").forEach(b => b.onclick = async () => {
+      const d = rows.find(x => x.id === +b.dataset.open);
+      $("rxName").value = d.name; $("rxBase").value = d.base; $("rxIlvl").value = d.item_level; $("rxInfl").value = d.influences.join(", ");
+      $("rxWants").value = d.wants.map(w => `${w.mod_type}:${w.max_tier}`).join(", ");
+      $("rxUrl").value = d.source_url || ""; $("rxText").value = d.source_text || "";
+      rxSteps = d.steps; await loadBenchOpts(); renderRx();
+    });
+  } catch (e) { $("rxLibrary").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+}
+$("rxFilterGo").onclick = loadRecipes;
+
+// ---------------------------------------------------------------- collected ideas (3 price groups)
+let collected = {divine_chaos: null, groups: {}};
+async function collectIdea(text, price, unit, source, feedbackEl) {
+  try {
+    let chaos = +price || null;
+    if (chaos && unit === "div") {
+      const d = await api("/api/market/price?name=" + encodeURIComponent("Divine Orb"));
+      chaos = chaos * d.chaos_value;
+    }
+    const r = await api("/api/ideas/collect", {method: "POST", body: JSON.stringify({text, price_chaos: chaos, source})});
+    const msg = `Added (${r.wants} mods${r.skipped_mods ? `, ${r.skipped_mods} not identified and left out` : ""}) ✓`;
+    if (feedbackEl.tagName === "BUTTON") feedbackEl.textContent = "Added ✓"; else feedbackEl.innerHTML = ` <span class="good">${esc(msg)}</span>`;
+    loadCollected();
+  } catch (e) {
+    if (feedbackEl.tagName === "BUTTON") feedbackEl.title = e.message, feedbackEl.textContent = "Not added";
+    else feedbackEl.innerHTML = ` <span class="bad">${esc(e.message)}</span>`;
+  }
+}
+const GROUP_TITLES = {under_10_div: "Under 10 divine", "10_to_100_div": "10 – 100 divine", over_100_div: "Over 100 divine", no_price: "No price entered"};
+async function loadCollected() {
+  try {
+    collected = await api("/api/ideas/collected");
+    const all = Object.values(collected.groups).flat();
+    if (!all.length) { $("colOut").textContent = "Nothing collected yet."; return; }
+    divineChaos = collected.divine_chaos;
+    $("colOut").innerHTML = Object.entries(GROUP_TITLES).filter(([k]) => (collected.groups[k] || []).length).map(([k, title]) =>
+      `<h3 style="margin:12px 0 4px;color:var(--gold);font-size:13px">${title} (${collected.groups[k].length})</h3>
+       <table><tr><th>Item</th><th>Wanted mods (tier)</th><th class="num">Price</th><th>Cheapest route</th><th class="num">Cost</th><th class="num">Profit</th><th></th></tr>` +
+      collected.groups[k].map(d => `<tr><td><b>${esc(d.name)}</b><br><span class="muted">${esc(d.base)}, ilvl ${d.item_level}, from ${esc(d.source)}</span></td>
+        <td>${d.wants.map(w => `${esc((w.text || w.mod_type).split("\n").join(" / "))} <span class="muted">T${w.max_tier}${w.bench ? " bench" : ""}</span>`).join("<br>")}</td>
+        <td class="num">${d.price_chaos ? money(d.price_chaos) : "–"}</td><td>${esc(d.best_route ?? "not planned")}</td>
+        <td class="num">${d.best_cost_chaos != null ? money(d.best_cost_chaos) : "–"}</td>
+        <td class="num">${d.profit_chaos != null ? `<span class="${d.profit_chaos >= 0 ? "good" : "bad"}">${money(d.profit_chaos)}</span>` : "–"}</td>
+        <td><button data-colopen="${d.id}">Open</button> <button data-coldel="${d.id}">✕</button></td></tr>`).join("") + "</table>").join("");
+    $("colOut").querySelectorAll("[data-coldel]").forEach(b => b.onclick = async () => { await api(`/api/ideas/collected/${b.dataset.coldel}`, {method: "DELETE"}); loadCollected(); });
+    $("colOut").querySelectorAll("[data-colopen]").forEach(b => b.onclick = () => {
+      const d = all.find(x => x.id === +b.dataset.colopen), relax = +$("colRelax").value;
+      $("planBase").value = d.base; $("planIlvl").value = d.item_level; $("planInfl").value = d.influences.join(", ");
+      planWants = d.wants.map(w => ({mod_type: w.mod_type, text: w.text, max_tier: w.bench ? 99 : Math.min(99, w.max_tier + relax), bench: w.bench, on: true}));
+      renderWants(); showTab("plan"); $("planGo").click();
+    });
+  } catch (e) { $("colOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+}
+$("colPlan").onclick = async () => {
+  const all = Object.values(collected.groups).flat(), relax = +$("colRelax").value;
+  $("colPlan").disabled = true;
+  for (const [i, d] of all.entries()) {
+    $("colStatus").textContent = ` Planning ${i + 1} of ${all.length}: ${d.name}…`;
+    try {
+      const r = await api("/api/plan", {method: "POST", body: JSON.stringify({base: d.base, item_level: d.item_level, influences: d.influences, budget_s: 0.6,
+        wants: d.wants.map(w => ({mod_type: w.mod_type, max_tier: w.bench ? 99 : Math.min(99, w.max_tier + relax), bench: !!w.bench}))})});
+      const best = r.routes.find(x => x.expected_chaos != null);
+      await api(`/api/ideas/collected/${d.id}/result`, {method: "POST", body: JSON.stringify({best_route: best ? best.name : "no realistic route found", best_cost_chaos: best ? best.expected_chaos : null})});
+    } catch (e) { await api(`/api/ideas/collected/${d.id}/result`, {method: "POST", body: JSON.stringify({best_route: "error: " + e.message, best_cost_chaos: null})}); }
+  }
+  $("colStatus").textContent = ` Done (quick estimates, 0.6 s per route; tiers relaxed by ${relax}).` +
+    (relax ? " With lower tiers the crafted item is weaker than the one you priced, so the profit is optimistic: check its own price with the trade link in the Route Planner." : "");
+  $("colPlan").disabled = false;
+  loadCollected();
+};
+
 // Craft ideas: plan every idea with a short time budget, then let the user add sale prices.
 $("ideasGo").onclick = async () => {
   const btn = $("ideasGo");
@@ -515,7 +760,7 @@ $("checkUpdates").onclick = async () => { try { const r = await api("/api/update
 $("fetchMarket").onclick = async () => { $("dataOut").textContent = "Fetching…"; try { $("dataOut").textContent = JSON.stringify(await api("/api/market/fetch", {method: "POST", body: "{}"}), null, 2); loadStatus(); } catch (e) { $("dataOut").textContent = e.message; } };
 $("saveOverride").onclick = async () => { try { $("dataOut").textContent = JSON.stringify(await api("/api/market/override", {method: "POST", body: JSON.stringify({name: $("ovName").value, chaos_value: +$("ovValue").value})}), null, 2); } catch (e) { $("dataOut").textContent = e.message; } };
 
-loadStatus(); loadBases(); loadActions(); loadRoi();
+loadStatus(); loadBases(); loadActions().then(renderRx); loadRoi(); loadRecipes(); loadCollected();
 </script>
 </body>
 </html>

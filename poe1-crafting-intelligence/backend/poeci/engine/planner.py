@@ -132,6 +132,30 @@ def _route(name, steps, action_ids, tries, successes, used, same_cost, fixed, no
                  [{"name": a, **assumption(a)} for a in names], notes)
 
 
+def simulate_recipe(gd: GameData, start: ItemState, recipe: Recipe, *, seed: int = 1,
+                    budget_s: float = 3.0, max_successes: int = 400) -> Route:
+    """Simulate a user/community recipe exactly like a planner route (Wald cost per success)."""
+    def try_fn(r, deadline):
+        return run_once(gd, recipe, start, r, deadline)
+
+    actions = sorted({s.action for s in recipe.steps})
+    steps = [describe_step(gd, s) for s in recipe.steps]
+    return _route(recipe.name, steps, actions, *_run(try_fn, budget_s, max_successes, random.Random(seed)), {}, [])
+
+
+def describe_step(gd: GameData, s: Step) -> str:
+    """A recipe step in plain words, e.g. 'Essence: Deafening Essence of Wrath, until the wanted mods appear'."""
+    p = s.params
+    detail = (p.get("essence_name") or ", ".join(p.get("fossil_names", [])) or p.get("tag")
+              or (gd.mods[p["mod_id"]].text.replace("\n", " / ") if p.get("mod_id") in gd.mods else "")
+              or " ".join(x for x in (p.get("kind"), p.get("from_element"), "to" if p.get("to_element") else None, p.get("to_element")) if x))
+    text = ACTIONS[s.action].name + (f": {detail}" if detail else "")
+    if s.until is not None:
+        wanted = ", ".join(r.mod_type for r in s.until.all_of)
+        text += f", repeat until {wanted}" if wanted else ", repeat"
+    return text
+
+
 def worst_accepted_mods(gd: GameData, item: ItemState, wants: list[Want]) -> dict[str, Mod]:
     """For each wanted mod type that can roll on this base: the mod of the worst
     accepted tier (its text shows the lowest values the user accepts)."""
@@ -375,4 +399,4 @@ def plan_routes(gd: GameData, base_id: str, item_level: int, wants: list[Want], 
     return routes
 
 
-__all__ = ["Want", "Route", "BenchCraft", "plan_routes", "worst_accepted_mods"]
+__all__ = ["Want", "Route", "BenchCraft", "plan_routes", "simulate_recipe", "worst_accepted_mods"]

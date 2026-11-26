@@ -408,9 +408,12 @@ ACTIONS: dict[str, ActionInfo] = {
 def apply(gd: GameData, item: ItemState, action_id: str, rng: random.Random, **params) -> ItemState:
     if action_id not in ACTIONS:
         raise InvalidAction(f"unknown or unsupported action {action_id!r}")
-    fn = ACTIONS[action_id].fn
-    missing = [n for n, p in inspect.signature(fn).parameters.items()
-               if p.kind is p.KEYWORD_ONLY and p.default is p.empty and n not in params]
-    if missing:
+    if missing := missing_params(action_id, params):
         raise InvalidAction(f"{ACTIONS[action_id].name}: missing {', '.join(missing)}")
-    return fn(gd, item, rng, **params)
+    return ACTIONS[action_id].fn(gd, item, rng, **params)
+
+
+def missing_params(action_id: str, params: dict) -> list[str]:
+    """Required keyword parameters of an action that `params` does not provide."""
+    sig = inspect.signature(ACTIONS[action_id].fn)
+    return [n for n, p in sig.parameters.items() if p.kind is p.KEYWORD_ONLY and p.default is p.empty and n not in params]

@@ -25,7 +25,11 @@
 - Fracturing Orb (experimental; poedb rule), Harvest element swaps (same tier number) and Harvest "more likely the same modifier types" (×90 from an outdated report, flagged in assumptions.json). Recipe conditions gain `min_mods` and `fractured`.
 - Planner: "Fracture, then Chaos" route (fracture the hardest wanted mod, restart on a wrong fracture). Simulator: Harvest swap field.
 - Fix: an action called without its required parameters (e.g. an essence without a name) crashed with HTTP 500; the engine now answers "missing …".
-- 65 automated tests.
+- Recipes tab: paste a Reddit post or guide → suggested steps (`parsing/recipe_text.py`), step editor (repeat once / until all wanted / until chosen mods, bench-craft picker), **Simulate and compare** against the app's best route, saved-recipe library filterable by base (`saved_recipes`, `/api/recipes*`, `/api/bench_options`).
+- Idea collector: items from the Item Analyzer (with the price seen) or the PoB import become craft ideas, grouped under 10 / 10–100 / over 100 divine with planned cost and profit (`saved_ideas`, `/api/ideas/collect`, `/api/ideas/collected*`).
+- Recipe validation names the step and the missing detail; partial locks are not offered in the bench picker; readable step descriptions.
+- Fix: a regex word boundary (``) had been written as a hidden backspace character; new test scans all code for control characters.
+- 71 automated tests.
 
 ## 0.1.0 (2026-11-26): Milestone 1
 

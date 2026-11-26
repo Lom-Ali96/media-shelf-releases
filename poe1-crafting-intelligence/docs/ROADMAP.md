@@ -53,6 +53,8 @@
 - ✅ **Route planner, stage A:** paste an item or choose wanted mods with a worst acceptable tier → standard methods ranked by expected cost, with steps (`engine/planner.py`). Next: more templates (fossils once verified, essence + exalt combos, multimod finishes), then the real pathfinder (P2 above).
 - ✅ **ROI:** trade-site search link with wanted mods pre-filled (opened by the user), manual sale price, profit/ROI per route, ROI board of saved crafts sorted by profit. Next: refresh saved costs on demand; show a bad-luck (90%) cost next to the expected cost.
 - ✅ **Import gear from Path of Building codes** (covers poe.ninja character pages, which offer a PoB export). Screenshots are not planned: they don't show tiers and text recognition misreads numbers.
+- ✅ Recipes: paste a Reddit post/guide → suggested steps → editor → simulate and compare with the app's best route; saved-recipe library by base (2026-11-26). Phase 6 MVP.
+- ✅ Idea collector: Item Analyzer / PoB items → ideas in three price groups with planned cost and profit (2026-11-26).
 - ✅ Craft Ideas: starter targets planned in one click, sale price + profit per idea, saved to the ROI board (2026-11-26).
 - ✅ Fossil routes (experimental), eDPS minimum in trade links, bench crafts and "find similar" in the Item Analyzer, mod-pool cache, stress test (2026-11-26).
 
