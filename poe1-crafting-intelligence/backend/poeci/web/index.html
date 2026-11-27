@@ -131,6 +131,15 @@
   </section>
 
   <section id="recipes">
+    <div class="card">
+      <h2>Guide library</h2>
+      <div class="small muted">Crafting guides collected via Craft of Exile's guide index (links to the original authors). Written guides are turned into recipes you can load, simulate and compare; videos are linked. Each guide shows the patch it was written for: older ones may rely on changed mechanics.</div>
+      <div class="row" style="margin-top:8px">
+        <label>Search <input id="gdSearch" size="26" placeholder="boots, RF, minion, fossil..."></label>
+        <label style="flex-direction:row;align-items:center;gap:4px"><input type="checkbox" id="gdCurrent"> only current (3.30)</label>
+      </div>
+      <div id="gdOut" class="small scroll" style="max-height:420px"></div>
+    </div>
     <div class="two">
       <div class="card">
         <h2>1. Paste a crafting post or guide</h2>
@@ -454,7 +463,10 @@ function renderRx() {
         <td><select data-i="${i}" data-f="repeat"><option value="once" ${s.repeat === "once" ? "selected" : ""}>once</option>
           <option value="until_wanted" ${s.repeat === "until_wanted" ? "selected" : ""}>until all wanted mods</option>
           <option value="until_mods" ${s.repeat === "until_mods" ? "selected" : ""}>until these mods:</option></select>
-          ${s.repeat === "until_mods" ? `<input data-i="${i}" data-f="mods" size="24" placeholder="ModType, ModType" value="${esc((s.mods || []).join(", "))}">` : ""}</td>
+          ${s.repeat === "until_mods" ? `<input data-i="${i}" data-f="mods" size="24" placeholder="ModType, ModType" value="${esc((s.mods || []).join(", "))}">` : ""}
+          <div class="muted">then check <input data-i="${i}" data-f="check" size="18" placeholder="(optional) ModType" value="${esc((s.check || []).join(", "))}">
+            if missing <select data-i="${i}" data-f="onfail"><option value="restart">start over</option>${rxSteps.map((_, k) =>
+              `<option value="goto:${k + 1}" ${s.on_fail === `goto:${k + 1}` ? "selected" : ""}>go back to step ${k + 1}</option>`).join("")}</select></div></td>
         <td class="muted">${esc(s.matched || "")}</td>
         <td><button data-i="${i}" data-m="-1">↑</button><button data-i="${i}" data-m="1">↓</button><button data-i="${i}" data-m="0">✕</button></td></tr>`;
     }).join("");
@@ -465,6 +477,8 @@ function renderRx() {
     else if (el.dataset.f === "bench") s.params = el.value ? {mod_id: el.value} : {};
     else if (el.dataset.f === "repeat") { s.repeat = el.value; renderRx(); }
     else if (el.dataset.f === "mods") s.mods = el.value.split(",").map(x => x.trim()).filter(Boolean);
+    else if (el.dataset.f === "check") s.check = el.value.split(",").map(x => x.trim()).filter(Boolean);
+    else if (el.dataset.f === "onfail") s.on_fail = el.value;
   });
   $("rxSteps").querySelectorAll("[data-m]").forEach(b => b.onclick = () => {
     const i = +b.dataset.i, m = +b.dataset.m;
@@ -476,7 +490,7 @@ function renderRx() {
 const parseWants = (text) => text.split(",").map(x => x.trim()).filter(Boolean).map(x => { const [t, tier] = x.split(":"); return {mod_type: t.trim(), max_tier: tier ? +tier : 99}; });
 const rxBody = () => ({name: $("rxName").value || "My recipe", base: $("rxBase").value.trim(), item_level: +$("rxIlvl").value,
   influences: $("rxInfl").value.split(",").map(x => x.trim()).filter(Boolean), wants: parseWants($("rxWants").value),
-  steps: rxSteps.map(({action, params, repeat, mods}) => ({action, params: params || {}, repeat, mods: mods || []})),
+  steps: rxSteps.map(({action, params, repeat, mods, check, on_fail}) => ({action, params: params || {}, repeat, mods: mods || [], check: check || [], on_fail: on_fail || "restart"})),
   source_url: $("rxUrl").value || null, source_text: $("rxText").value || null});
 $("rxBase").onchange = async () => { await loadBenchOpts(); renderRx(); };
 $("rxSuggest").onclick = async () => {
@@ -538,6 +552,46 @@ async function loadRecipes() {
   } catch (e) { $("rxLibrary").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
 }
 $("rxFilterGo").onclick = loadRecipes;
+
+// ---------------------------------------------------------------- guide library
+let guideData = null;
+async function loadGuides() {
+  try { guideData = await api("/api/guides"); renderGuides(); } catch (e) { $("gdOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+}
+function renderGuides() {
+  if (!guideData) return;
+  const q = $("gdSearch").value.trim().toLowerCase(), onlyCurrent = $("gdCurrent").checked;
+  const hit = (...fields) => !q || fields.join(" ").toLowerCase().includes(q);
+  const badge = (status, note) => `<span class="pill ${status === "current" ? "ok" : "part"}" title="${esc(note || "")}">${status === "current" ? "3.30" : "older patch"}</span>`;
+  const recipes = guideData.recipes.filter(r => (!onlyCurrent || r.status === "current") && hit(r.name, r.author, r.base, r.notes.join(" ")));
+  const notes = guideData.notes_only.filter(r => (!onlyCurrent || r.status === "current") && hit(r.name, r.author, r.summary.join(" ")));
+  const index = guideData.index.filter(g => !onlyCurrent && hit(g.title, g.author, g.tags.join(" ")));
+  $("gdOut").innerHTML =
+    `<h3 style="margin:8px 0 4px;color:var(--gold);font-size:13px">Recipes you can simulate (${recipes.length})</h3>
+     <table><tr><th>Guide</th><th>Base</th><th>Steps</th><th></th></tr>${recipes.map(r => `<tr>
+       <td><b>${esc(r.name)}</b> ${badge(r.status, r.patch_note)}<br><span class="muted">by ${esc(r.author)} · <a href="${esc(r.url)}" target="_blank" rel="noopener">original</a></span></td>
+       <td>${esc(r.base)} <span class="muted">ilvl ${r.item_level}${r.influences.length ? ", " + esc(r.influences.join("/")) : ""}</span></td>
+       <td class="muted">${r.steps.length} steps</td><td><button data-gload="${guideData.recipes.indexOf(r)}">Load</button></td></tr>`).join("")}</table>
+     <h3 style="margin:12px 0 4px;color:var(--gold);font-size:13px">Written guides (summary only) (${notes.length})</h3>
+     ${notes.map(r => `<details><summary><b>${esc(r.name)}</b> ${badge(r.status, r.patch_note)} <span class="muted">by ${esc(r.author)}</span></summary>
+       <ol>${r.summary.map(s => `<li>${esc(s)}</li>`).join("")}</ol><p class="muted">Not simulated: ${esc(r.why_not_simulated)}. <a href="${esc(r.url)}" target="_blank" rel="noopener">original</a></p></details>`).join("")}
+     ${index.length ? `<h3 style="margin:12px 0 4px;color:var(--gold);font-size:13px">All guides in Craft of Exile's index (${index.length})</h3>
+     <table><tr><th>Title</th><th>By</th><th>Type</th><th>Patch</th><th>Tags</th></tr>${index.map(g => `<tr>
+       <td><a href="${esc(g.url)}" target="_blank" rel="noopener">${esc(g.title)}</a></td><td>${esc(g.author)}</td><td>${esc(g.type)}</td>
+       <td>${esc(g.patch)} <span class="muted">(${esc(g.league)})</span></td><td class="muted">${esc(g.tags.join(", "))}</td></tr>`).join("")}</table>` : ""}`;
+  $("gdOut").querySelectorAll("[data-gload]").forEach(b => b.onclick = async () => {
+    const r = guideData.recipes[+b.dataset.gload];
+    $("rxName").value = r.name; $("rxBase").value = r.base; $("rxIlvl").value = r.item_level; $("rxInfl").value = r.influences.join(", ");
+    $("rxWants").value = r.wants.map(w => `${w.mod_type}:${w.max_tier}`).join(", ");
+    $("rxUrl").value = r.url; $("rxText").value = "";
+    rxSteps = r.steps.map(s => ({...s, matched: "from the guide"}));
+    await loadBenchOpts(); renderRx();
+    $("rxNotes").innerHTML = `<b>${esc(r.name)}</b> (${esc(r.patch_note)})<ul>${r.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>`;
+    $("rxName").scrollIntoView({behavior: "smooth", block: "center"});
+  });
+}
+$("gdSearch").oninput = renderGuides;
+$("gdCurrent").onchange = renderGuides;
 
 // ---------------------------------------------------------------- collected ideas (3 price groups)
 let collected = {divine_chaos: null, groups: {}};
@@ -779,7 +833,7 @@ $("checkUpdates").onclick = async () => { try { const r = await api("/api/update
 $("fetchMarket").onclick = async () => { $("dataOut").textContent = "Fetching…"; try { $("dataOut").textContent = JSON.stringify(await api("/api/market/fetch", {method: "POST", body: "{}"}), null, 2); loadStatus(); } catch (e) { $("dataOut").textContent = e.message; } };
 $("saveOverride").onclick = async () => { try { $("dataOut").textContent = JSON.stringify(await api("/api/market/override", {method: "POST", body: JSON.stringify({name: $("ovName").value, chaos_value: +$("ovValue").value})}), null, 2); } catch (e) { $("dataOut").textContent = e.message; } };
 
-loadStatus(); loadBases(); loadActions().then(renderRx); loadRoi(); loadRecipes(); loadCollected();
+loadStatus(); loadBases(); loadActions().then(renderRx); loadRoi(); loadRecipes(); loadCollected(); loadGuides();
 </script>
 </body>
 </html>

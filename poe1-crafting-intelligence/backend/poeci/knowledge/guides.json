@@ -1,0 +1,1319 @@
+{
+ "_source": "Guide index from Craft of Exile (craftofexile.com/json/data/poec_guides.json, read 2026-11-27): titles, authors and links only. Recipes and notes are our own paraphrase of the written guides, with links to the originals; videos are linked, not summarised.",
+ "index": [
+  {
+   "title": "Mastering basic metacrafting with fractured bases",
+   "author": "bigducks",
+   "url": "https://www.youtube.com/watch?v=tczoSY_99IU",
+   "type": "video",
+   "date": "2023-09-26",
+   "league": "ancestor",
+   "patch": "3.22",
+   "category": "general",
+   "tags": [
+    "ssf",
+    "fracture",
+    "essence",
+    "metamods"
+   ]
+  },
+  {
+   "title": "Full basics of crafting explained in 40 minutes",
+   "author": "ghazzy",
+   "url": "https://www.youtube.com/watch?v=DXDxV0pccxw",
+   "type": "video",
+   "date": "2023-01-24",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "general",
+   "tags": [
+    "ssf"
+   ]
+  },
+  {
+   "title": "Fossil crafting explained!",
+   "author": "ghazzy",
+   "url": "https://www.youtube.com/watch?v=uu4cn4cUENk",
+   "type": "video",
+   "date": "2023-02-09",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "general",
+   "tags": [
+    "fossil",
+    "ssf"
+   ]
+  },
+  {
+   "title": "Essence crafting explained!",
+   "author": "ghazzy",
+   "url": "https://www.youtube.com/watch?v=AnLlsm7ANUo",
+   "type": "video",
+   "date": "2023-01-26",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "general",
+   "tags": [
+    "essence",
+    "ssf"
+   ]
+  },
+  {
+   "title": "Dark Pact Helmet",
+   "author": "ghazzy",
+   "url": "https://www.youtube.com/watch?v=Q2mAxAXrVAs",
+   "type": "video",
+   "date": "2022-12-23",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "beast",
+    "influenced",
+    "metamods",
+    "harvest"
+   ]
+  },
+  {
+   "title": "Dark Pact Body Armour",
+   "author": "ghazzy",
+   "url": "https://www.youtube.com/watch?v=fgkUzQIDyBY",
+   "type": "video",
+   "date": "2022-12-17",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "curse",
+    "critical",
+    "harvest",
+    "influenced",
+    "beast",
+    "metamods"
+   ]
+  },
+  {
+   "title": "Dark Pact Gloves",
+   "author": "ghazzy",
+   "url": "https://www.youtube.com/watch?v=pnew3xrVSA8",
+   "type": "video",
+   "date": "2022-12-16",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "minion",
+    "essence",
+    "eldritch",
+    "fracture"
+   ]
+  },
+  {
+   "title": "High Life or ES + ES or Life on block Shield",
+   "author": "ghazzy",
+   "url": "https://www.poe-vault.com/guides/crafting-basic-shields",
+   "type": "written",
+   "date": "2022-08-17",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "es",
+    "life",
+    "fossil"
+   ]
+  },
+  {
+   "title": "High ES Helm",
+   "author": "ghazzy",
+   "url": "https://www.poe-vault.com/guides/crafting-basic-high-es-helmet",
+   "type": "written",
+   "date": "2022-08-21",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "es",
+    "fossil"
+   ]
+  },
+  {
+   "title": "Movement speed + Life or ES Boots",
+   "author": "ghazzy",
+   "url": "https://www.poe-vault.com/guides/crafting-basic-boots",
+   "type": "written",
+   "date": "2022-05-11",
+   "league": "sentinel",
+   "patch": "3.18",
+   "category": "item",
+   "tags": [
+    "es",
+    "life",
+    "fossil"
+   ]
+  },
+  {
+   "title": "High Life or ES Body Armor",
+   "author": "ghazzy",
+   "url": "https://www.poe-vault.com/guides/crafting-basic-body-armor",
+   "type": "written",
+   "date": "2022-05-11",
+   "league": "sentinel",
+   "patch": "3.18",
+   "category": "item",
+   "tags": [
+    "es",
+    "life",
+    "fossil"
+   ]
+  },
+  {
+   "title": "Generic +2 Minion Wand",
+   "author": "ghazzy",
+   "url": "https://www.poe-vault.com/guides/crafting-2-generic-minion-wand",
+   "type": "written",
+   "date": "2022-08-21",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "minion",
+    "fossil",
+    "veiling"
+   ]
+  },
+  {
+   "title": "Lightning Cluster Jewels",
+   "author": "ghazzy",
+   "url": "https://www.poe-vault.com/guides/lightning-cluster-jewels",
+   "type": "written",
+   "date": "2022-10-28",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "lightning",
+    "harvest"
+   ]
+  },
+  {
+   "title": "RF Sceptre",
+   "author": "pohx",
+   "url": "https://www.youtube.com/watch?v=jv0koq8MPXs",
+   "type": "video",
+   "date": "2022-12-07",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "ssf",
+    "beast",
+    "metamods"
+   ]
+  },
+  {
+   "title": "RF Body Armor",
+   "author": "pohx",
+   "url": "https://www.pohx.net/Crafts",
+   "type": "written",
+   "date": "2022-12-07",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "ssf",
+    "life",
+    "essence",
+    "eldritch"
+   ]
+  },
+  {
+   "title": "RF Helmet",
+   "author": "pohx",
+   "url": "https://www.pohx.net/Crafts",
+   "type": "written",
+   "date": "2022-12-07",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "ssf",
+    "life",
+    "essence",
+    "influenced"
+   ]
+  },
+  {
+   "title": "RF Gloves",
+   "author": "pohx",
+   "url": "https://www.pohx.net/Crafts",
+   "type": "written",
+   "date": "2022-12-07",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "ssf",
+    "life",
+    "harvest",
+    "essence",
+    "eldritch",
+    "fossil"
+   ]
+  },
+  {
+   "title": "RF Boots",
+   "author": "pohx",
+   "url": "https://www.pohx.net/Crafts",
+   "type": "written",
+   "date": "2022-12-07",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "ssf",
+    "life",
+    "harvest",
+    "essence"
+   ]
+  },
+  {
+   "title": "RF Shield",
+   "author": "pohx",
+   "url": "https://www.pohx.net/Crafts",
+   "type": "written",
+   "date": "2022-12-07",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "ssf",
+    "life",
+    "harvest"
+   ]
+  },
+  {
+   "title": "RF Rings",
+   "author": "pohx",
+   "url": "https://www.pohx.net/Crafts",
+   "type": "written",
+   "date": "2022-12-07",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "ssf",
+    "life",
+    "essence",
+    "harvest"
+   ]
+  },
+  {
+   "title": "RF Amulet",
+   "author": "pohx",
+   "url": "https://www.pohx.net/Crafts",
+   "type": "written",
+   "date": "2022-12-07",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "ssf",
+    "life",
+    "essence",
+    "harvest"
+   ]
+  },
+  {
+   "title": "RF Belt",
+   "author": "pohx",
+   "url": "https://www.pohx.net/Crafts",
+   "type": "written",
+   "date": "2022-12-07",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "ssf",
+    "life",
+    "harvest"
+   ]
+  },
+  {
+   "title": "RF Jewel",
+   "author": "pohx",
+   "url": "https://www.pohx.net/Crafts",
+   "type": "written",
+   "date": "2022-12-07",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "ssf",
+    "life",
+    "harvest"
+   ]
+  },
+  {
+   "title": "A Beginner's Guide to Items in Path of Exile",
+   "author": "tenkiei",
+   "url": "https://www.youtube.com/watch?v=BRk6PZiGayc",
+   "type": "video",
+   "date": "2022-04-10",
+   "league": "ultimatum",
+   "patch": "3.14",
+   "category": "general",
+   "tags": [
+    "ssf"
+   ]
+  },
+  {
+   "title": "How To Craft Ward Gear",
+   "author": "tenkiei",
+   "url": "https://www.youtube.com/watch?v=msZIpDkvmHw",
+   "type": "video",
+   "date": "2022-03-27",
+   "league": "archnemesis",
+   "patch": "3.17",
+   "category": "general",
+   "tags": [
+    "ward",
+    "ssf"
+   ]
+  },
+  {
+   "title": "Beginner's Guide To Fossil Crafting",
+   "author": "tenkiei",
+   "url": "https://www.youtube.com/watch?v=zRCsM-vK26s",
+   "type": "video",
+   "date": "2022-01-23",
+   "league": "scourge",
+   "patch": "3.16",
+   "category": "general",
+   "tags": [
+    "fossil",
+    "ssf"
+   ]
+  },
+  {
+   "title": "Avoidance Boots",
+   "author": "tenkiei",
+   "url": "https://www.youtube.com/watch?v=ZbCxNS8VBPs",
+   "type": "video",
+   "date": "2022-03-04",
+   "league": "scourge",
+   "patch": "3.16",
+   "category": "item",
+   "tags": [
+    "ssf",
+    "avoid",
+    "essence",
+    "eldritch"
+   ]
+  },
+  {
+   "title": "Crafting a Magic Find Helmet",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=ehhzMlJixBk",
+   "type": "video",
+   "date": "2022-09-31",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "essence",
+    "eldritch"
+   ]
+  },
+  {
+   "title": "Crafting 8-link Aura Stacker Gloves",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=GyzJHoCU6xs",
+   "type": "video",
+   "date": "2022-12-27",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "essence",
+    "harvest",
+    "influenced",
+    "metamods"
+   ]
+  },
+  {
+   "title": "Venom Gyre Omniscience Ring",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=4LO3RLDrsbM",
+   "type": "video",
+   "date": "2022-12-30",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "fossil",
+    "veiling",
+    "metamods"
+   ]
+  },
+  {
+   "title": "Crafting a Blade Vortex Bow",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=zhUHx4Y1poQ",
+   "type": "video",
+   "date": "2022-09-24",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "essence"
+   ]
+  },
+  {
+   "title": "Crafting Endgame Lightning Strike Gloves",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=8kjMH55-Wx0",
+   "type": "video",
+   "date": "2022-08-21",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "essence",
+    "fracture"
+   ]
+  },
+  {
+   "title": "Crafting Abyssal Int Stacker Boots",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=HQMAu8V7cww",
+   "type": "video",
+   "date": "2022-09-17",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "es",
+    "attribute",
+    "fossil",
+    "veiling",
+    "metamods"
+   ]
+  },
+  {
+   "title": "Crafting a Chaos DoT Bow",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=5grZSggzNMc",
+   "type": "video",
+   "date": "2022-09-15",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "chaos",
+    "gem",
+    "metamods",
+    "influenced"
+   ]
+  },
+  {
+   "title": "Crafting a Dex Stacking Claw",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=qFjm1JWlOqE",
+   "type": "video",
+   "date": "2022-08-29",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "attribute",
+    "beast",
+    "metamods",
+    "veiling"
+   ]
+  },
+  {
+   "title": "+3 Short Bow for Explosive Arrow (or Toxic Rain)",
+   "author": "spicysushi",
+   "url": "https://www.youtube.com/watch?v=Tr6RQ49xLkQ",
+   "type": "video",
+   "date": "2022-08-24",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "essence",
+    "metamods"
+   ]
+  },
+  {
+   "title": "Explosive Arrow DoT Quiver",
+   "author": "spicysushi",
+   "url": "https://www.youtube.com/watch?v=e8MoV4v8y58",
+   "type": "video",
+   "date": "2022-08-30",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "essence",
+    "metamods",
+    "influenced"
+   ]
+  },
+  {
+   "title": "+2 Physical Skill Amulet for Corrupting Fever",
+   "author": "spicysushi",
+   "url": "https://www.youtube.com/watch?v=kNJrnV3bGyY",
+   "type": "video",
+   "date": "2022-08-30",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "physical",
+    "beast",
+    "veiling",
+    "harvest",
+    "metamods"
+   ]
+  },
+  {
+   "title": "Crafting Eldritch Boots for Omniscience",
+   "author": "spicysushi",
+   "url": "https://www.youtube.com/watch?v=4s0oOfUr2bU",
+   "type": "video",
+   "date": "2022-09-01",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "attribute",
+    "essence",
+    "fracture",
+    "metamods",
+    "veiling",
+    "eldritch"
+   ]
+  },
+  {
+   "title": "High-end Righteous Fire Chest for Jugg",
+   "author": "spicysushi",
+   "url": "https://www.youtube.com/watch?v=S2fo7RTwkSg",
+   "type": "video",
+   "date": "2022-12-23",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "essence",
+    "fracture",
+    "harvest",
+    "eldritch",
+    "veiling",
+    "metamods"
+   ]
+  },
+  {
+   "title": "Crafting a Venom Gyre Claw for Strength-Stacking",
+   "author": "spicysushi",
+   "url": "https://www.youtube.com/watch?v=KQzSoZLhLjA",
+   "type": "video",
+   "date": "2022-09-10",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "essence",
+    "fracture",
+    "metamods",
+    "harvest",
+    "veiling"
+   ]
+  },
+  {
+   "title": "Crafting a Forbidden Rite Helmet",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=rCSDLqDNeWA",
+   "type": "video",
+   "date": "2023-01-06",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "harvest"
+   ]
+  },
+  {
+   "title": "Crafting a Spark Wand",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=CR11v8Z-qRI",
+   "type": "video",
+   "date": "2023-01-10",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "essence",
+    "fracture",
+    "metamods",
+    "harvest",
+    "veiling"
+   ]
+  },
+  {
+   "title": "Crafting an Ethereal Knives Helmet",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=v6J4kzNABxo",
+   "type": "video",
+   "date": "2023-01-16",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "metamods",
+    "harvest"
+   ]
+  },
+  {
+   "title": "Crafting a Cast on Crit Wand",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=T-Htm9oesf8",
+   "type": "video",
+   "date": "2023-01-23",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "essence",
+    "fracture",
+    "metamods",
+    "veiling"
+   ]
+  },
+  {
+   "title": "Crafting an Elemental Hit Bow",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=t7Ohi5-MKRg",
+   "type": "video",
+   "date": "2023-04-24",
+   "league": "crucible",
+   "patch": "3.21",
+   "category": "item",
+   "tags": [
+    "essence",
+    "metamods"
+   ]
+  },
+  {
+   "title": "Crafting an Explode Totem Bow",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=WZ1CitLEp1g",
+   "type": "video",
+   "date": "2023-04-27",
+   "league": "crucible",
+   "patch": "3.21",
+   "category": "item",
+   "tags": [
+    "essence",
+    "metamods",
+    "fossil",
+    "influenced"
+   ]
+  },
+  {
+   "title": "Crafting a Reservation Attack Helmet",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=Jwi68TzcFOg",
+   "type": "video",
+   "date": "2023-05-01",
+   "league": "crucible",
+   "patch": "3.21",
+   "category": "item",
+   "tags": [
+    "essence",
+    "eldritch",
+    "harvest"
+   ]
+  },
+  {
+   "title": "Crafting a Poison Explode Totem Bow",
+   "author": "lolcohol",
+   "url": "https://www.youtube.com/watch?v=jygYVMqo8rQ",
+   "type": "video",
+   "date": "2023-05-04",
+   "league": "crucible",
+   "patch": "3.21",
+   "category": "item",
+   "tags": [
+    "influenced",
+    "metamods"
+   ]
+  },
+  {
+   "title": "Crafting a +2 Spell/Dot Multiplier Weapon for RF or Cold Dot",
+   "author": "spicysushi",
+   "url": "https://www.youtube.com/watch?v=NgOOTx_KT_0",
+   "type": "video",
+   "date": "2023-01-04",
+   "league": "sanctum",
+   "patch": "3.20",
+   "category": "item",
+   "tags": [
+    "fracture",
+    "metamods",
+    "harvest",
+    "fossil"
+   ]
+  },
+  {
+   "title": "+1 Arrow Quiver for Lightning Arrow or Tornado Shot",
+   "author": "spicysushi",
+   "url": "https://www.youtube.com/watch?v=9Ix9bT8zl1g",
+   "type": "video",
+   "date": "2023-04-25",
+   "league": "crucible",
+   "patch": "3.21",
+   "category": "item",
+   "tags": [
+    "fracture",
+    "essence",
+    "metamods"
+   ]
+  },
+  {
+   "title": "Spark Gloves for Self-Chill or Aurastacker",
+   "author": "spicysushi",
+   "url": "https://www.youtube.com/watch?v=-PnwoOmznrs",
+   "type": "video",
+   "date": "2022-09-19",
+   "league": "kalandra",
+   "patch": "3.19",
+   "category": "item",
+   "tags": [
+    "fossil",
+    "influenced",
+    "metamods",
+    "harvest"
+   ]
+  }
+ ],
+ "recipes": [
+  {
+   "name": "High ES helmet (fossil)",
+   "author": "GhazzyTV",
+   "url": "https://www.poe-vault.com/guides/crafting-basic-high-es-helmet",
+   "status": "older",
+   "patch_note": "poe-vault page dated 2024-07-25 (index: Kalandra 3.19)",
+   "base": "Hubris Circlet",
+   "item_level": 84,
+   "influences": [],
+   "wants": [
+    {
+     "mod_type": "LocalEnergyShieldPercent",
+     "max_tier": 2,
+     "bench": false
+    },
+    {
+     "mod_type": "LocalEnergyShield",
+     "max_tier": 2,
+     "bench": false
+    }
+   ],
+   "steps": [
+    {
+     "action": "fossil",
+     "params": {
+      "fossil_names": [
+       "Dense Fossil"
+      ]
+     },
+     "repeat": "until_wanted",
+     "mods": []
+    }
+   ],
+   "notes": [
+    "1-socket Primitive Chaotic Resonator with a Dense Fossil until 2-3 high-tier ES prefixes.",
+    "Then bench-craft a missing ES prefix or resistances."
+   ]
+  },
+  {
+   "name": "High ES body armour (fossil)",
+   "author": "GhazzyTV",
+   "url": "https://www.poe-vault.com/guides/crafting-basic-body-armor",
+   "status": "older",
+   "patch_note": "poe-vault page dated 2024-07-25 (index: Sentinel 3.18)",
+   "base": "Vaal Regalia",
+   "item_level": 86,
+   "influences": [],
+   "wants": [
+    {
+     "mod_type": "LocalEnergyShieldPercent",
+     "max_tier": 2,
+     "bench": false
+    },
+    {
+     "mod_type": "LocalEnergyShield",
+     "max_tier": 2,
+     "bench": false
+    }
+   ],
+   "steps": [
+    {
+     "action": "fossil",
+     "params": {
+      "fossil_names": [
+       "Dense Fossil"
+      ]
+     },
+     "repeat": "until_wanted",
+     "mods": []
+    }
+   ],
+   "notes": [
+    "Item level 86+ for the top ES tier.",
+    "Bench-craft a third ES prefix if one is open."
+   ]
+  },
+  {
+   "name": "High life body armour (fossil)",
+   "author": "GhazzyTV",
+   "url": "https://www.poe-vault.com/guides/crafting-basic-body-armor",
+   "status": "older",
+   "patch_note": "poe-vault page dated 2024-07-25 (index: Sentinel 3.18)",
+   "base": "Astral Plate",
+   "item_level": 84,
+   "influences": [],
+   "wants": [
+    {
+     "mod_type": "IncreasedLife",
+     "max_tier": 2,
+     "bench": false
+    }
+   ],
+   "steps": [
+    {
+     "action": "fossil",
+     "params": {
+      "fossil_names": [
+       "Pristine Fossil"
+      ]
+     },
+     "repeat": "until_wanted",
+     "mods": []
+    }
+   ],
+   "notes": [
+    "Item level 84 for tier-1 resistances.",
+    "Keep high life plus resistances or armour, bench-craft the rest."
+   ]
+  },
+  {
+   "name": "Movement speed + ES boots (fossil)",
+   "author": "GhazzyTV",
+   "url": "https://www.poe-vault.com/guides/crafting-basic-boots",
+   "status": "older",
+   "patch_note": "poe-vault page dated 2024-07-25 (index: Sentinel 3.18)",
+   "base": "Sorcerer Boots",
+   "item_level": 86,
+   "influences": [],
+   "wants": [
+    {
+     "mod_type": "LocalEnergyShield",
+     "max_tier": 3,
+     "bench": false
+    },
+    {
+     "mod_type": "MovementVelocity",
+     "max_tier": 3,
+     "bench": false
+    }
+   ],
+   "steps": [
+    {
+     "action": "fossil",
+     "params": {
+      "fossil_names": [
+       "Dense Fossil",
+       "Shuddering Fossil"
+      ]
+     },
+     "repeat": "until_wanted",
+     "mods": []
+    }
+   ],
+   "notes": [
+    "2-socket Potent Chaotic Resonator.",
+    "No movement speed roll: bench-craft it instead."
+   ]
+  },
+  {
+   "name": "Movement speed + life boots (fossil)",
+   "author": "GhazzyTV",
+   "url": "https://www.poe-vault.com/guides/crafting-basic-boots",
+   "status": "older",
+   "patch_note": "poe-vault page dated 2024-07-25 (index: Sentinel 3.18)",
+   "base": "Two-Toned Boots",
+   "item_level": 86,
+   "influences": [],
+   "wants": [
+    {
+     "mod_type": "IncreasedLife",
+     "max_tier": 3,
+     "bench": false
+    },
+    {
+     "mod_type": "MovementVelocity",
+     "max_tier": 3,
+     "bench": false
+    }
+   ],
+   "steps": [
+    {
+     "action": "fossil",
+     "params": {
+      "fossil_names": [
+       "Pristine Fossil",
+       "Shuddering Fossil"
+      ]
+     },
+     "repeat": "until_wanted",
+     "mods": []
+    }
+   ],
+   "notes": [
+    "Item level 86 for the 35% movement speed tier.",
+    "In 3.30 Two-Toned Boots only drop at higher item tiers (3.30 patch notes)."
+   ]
+  },
+  {
+   "name": "High ES shield (fossil)",
+   "author": "GhazzyTV",
+   "url": "https://www.poe-vault.com/guides/crafting-basic-shields",
+   "status": "older",
+   "patch_note": "poe-vault page dated 2024-07-25 (index: Kalandra 3.19)",
+   "base": "Titanium Spirit Shield",
+   "item_level": 86,
+   "influences": [],
+   "wants": [
+    {
+     "mod_type": "LocalEnergyShieldPercent",
+     "max_tier": 2,
+     "bench": false
+    },
+    {
+     "mod_type": "LocalEnergyShield",
+     "max_tier": 2,
+     "bench": false
+    }
+   ],
+   "steps": [
+    {
+     "action": "fossil",
+     "params": {
+      "fossil_names": [
+       "Dense Fossil"
+      ]
+     },
+     "repeat": "until_wanted",
+     "mods": []
+    }
+   ],
+   "notes": [
+    "Life version: Pristine Fossil on any shield, item level 84-85.",
+    "ES or life on block needs a Shaper, Crusader or Warlord base."
+   ]
+  },
+  {
+   "name": "+2 minion wand (fossils, then bench)",
+   "author": "GhazzyTV",
+   "url": "https://www.poe-vault.com/guides/crafting-2-generic-minion-wand",
+   "status": "older",
+   "patch_note": "poe-vault page dated 2024-07-25, mentions Sentinel",
+   "base": "Convoking Wand",
+   "item_level": 84,
+   "influences": [],
+   "wants": [
+    {
+     "mod_type": "GlobalIncreaseSpellSkillGemLevel",
+     "max_tier": 99,
+     "bench": false
+    },
+    {
+     "mod_type": "GlobalIncreaseMinionSpellSkillGemLevel",
+     "max_tier": 99,
+     "bench": false
+    },
+    {
+     "mod_type": "MinionDamageOnWeapon",
+     "max_tier": 3,
+     "bench": false
+    }
+   ],
+   "steps": [
+    {
+     "action": "fossil",
+     "params": {
+      "fossil_names": [
+       "Corroded Fossil",
+       "Jagged Fossil",
+       "Shuddering Fossil",
+       "Metallic Fossil"
+      ]
+     },
+     "repeat": "until_wanted",
+     "mods": []
+    }
+   ],
+   "notes": [
+    "Prime Chaotic Resonator with four fossils that block unwanted prefix groups (guide: about 10-12 tries for the gem-level prefixes).",
+    "Then bench-craft 'Trigger a Socketed Spell' on an open suffix (add a bench step and pick it), or annul suffixes first.",
+    "Optional: 'Prefixes Cannot Be Changed' + Veiled Chaos Orb for the veiled Trigger mod (Veiled Chaos is not modelled)."
+   ]
+  },
+  {
+   "name": "Elder RF helmet (essence, beasts, Harvest)",
+   "author": "pohx",
+   "url": "https://www.pohx.net/crafts/elder-rf-helmet/",
+   "status": "current",
+   "patch_note": "pohx.net, updated 2026-11-12 for Covens (3.30)",
+   "base": "Eternal Burgonet",
+   "item_level": 84,
+   "influences": [
+    "elder"
+   ],
+   "wants": [
+    {
+     "mod_type": "BurningDamageSupported",
+     "max_tier": 99,
+     "bench": false
+    },
+    {
+     "mod_type": "IncreasedLife",
+     "max_tier": 4,
+     "bench": false
+    }
+   ],
+   "steps": [
+    {
+     "action": "essence",
+     "params": {
+      "essence_name": "Essence of Horror"
+     },
+     "repeat": "until_mods",
+     "mods": [
+      "BurningDamageSupported"
+     ]
+    },
+    {
+     "action": "beast_metamod",
+     "params": {
+      "mod_id": "DexMasterItemGenerationCannotChangeSuffixesB"
+     },
+     "repeat": "once",
+     "mods": []
+    },
+    {
+     "action": "harvest_reforge",
+     "params": {
+      "tag": "life"
+     },
+     "repeat": "once",
+     "mods": [],
+     "check": [
+      "IncreasedLife"
+     ],
+     "on_fail": "goto:2"
+    }
+   ],
+   "notes": [
+    "Base: item level 82+ Elder pure-armour helmet.",
+    "Essence of Horror until any tier of Burning Damage (bench a prefix and exalt open suffixes so each Horror counts).",
+    "If life is low: Wild Bristle Matron for 'Suffixes Cannot Be Changed', then Harvest reforge life; repeat both until life (guide: about 3.3% brick chance per repeat, settle for 70+ life).",
+    "The guide first uses Farric Lynx Alpha to fill the suffixes; add that step if your item has an open suffix.",
+    "The guide says the new 3.30 meta-crafts may make the bench lock cheaper than the beast: compare both."
+   ]
+  },
+  {
+   "name": "RF belt (Pristine fossil)",
+   "author": "pohx",
+   "url": "https://www.pohx.net/crafts/belt/",
+   "status": "current",
+   "patch_note": "pohx.net, updated 2026-11-11 for Covens (3.30)",
+   "base": "Stygian Vise",
+   "item_level": 84,
+   "influences": [
+    "elder"
+   ],
+   "wants": [
+    {
+     "mod_type": "IncreasedLife",
+     "max_tier": 3,
+     "bench": false
+    },
+    {
+     "mod_type": "LifeRegeneration",
+     "max_tier": 3,
+     "bench": false
+    },
+    {
+     "mod_type": "MaximumLifeIncreasePercent",
+     "max_tier": 2,
+     "bench": false
+    }
+   ],
+   "steps": [
+    {
+     "action": "fossil",
+     "params": {
+      "fossil_names": [
+       "Pristine Fossil"
+      ]
+     },
+     "repeat": "until_wanted",
+     "mods": []
+    }
+   ],
+   "notes": [
+    "Guide budget: about 300 Pristine Fossils and Primitive Chaotic Resonators, plus 20% Fertile Catalyst quality.",
+    "Then bench armour, resistances, attributes. In 3.30 Stygian Vise drops only at item tier 5 (patch notes)."
+   ]
+  },
+  {
+   "name": "RF jewel (Harvest reforge)",
+   "author": "pohx",
+   "url": "https://www.pohx.net/crafts/jewels/",
+   "status": "current",
+   "patch_note": "pohx.net, updated 2026-11-11 for Covens (3.30)",
+   "base": "Crimson Jewel",
+   "item_level": 84,
+   "influences": [],
+   "wants": [
+    {
+     "mod_type": "PercentIncreasedLifeForJewel",
+     "max_tier": 99,
+     "bench": false
+    },
+    {
+     "mod_type": "BurningDamageForJewel",
+     "max_tier": 99,
+     "bench": false
+    }
+   ],
+   "steps": [
+    {
+     "action": "alchemy",
+     "params": {},
+     "repeat": "once",
+     "mods": []
+    },
+    {
+     "action": "harvest_reforge",
+     "params": {
+      "tag": "life"
+     },
+     "repeat": "until_wanted",
+     "mods": []
+    }
+   ],
+   "notes": [
+    "Reforge life, fire or chaos; at least two wanted mods to be worth using.",
+    "Other useful suffixes: fire or global DoT multiplier, chaos resistance. The author suggests buying jewels instead."
+   ]
+  }
+ ],
+ "notes_only": [
+  {
+   "name": "RF gloves (fractured base, essences, Eldritch)",
+   "author": "pohx",
+   "url": "https://www.pohx.net/crafts/gloves/",
+   "status": "current",
+   "patch_note": "updated 2026-11-11 (3.30)",
+   "summary": [
+    "Buy a fractured armour glove (life regen, dex, life or chaos res fracture; item level 84-85).",
+    "20+ Screaming Essences (Sorrow, Envy or Greed) until the wanted mods.",
+    "Bench-craft life, area/damage, damage during flask.",
+    "Lesser Eldritch Ember until Ignite spread (or fire DoT multi), then Lesser Eldritch Ichor until % damage per 100 strength."
+   ],
+   "why_not_simulated": "starts from a fractured base you buy: paste that item in the Simulator or a Recipe to plan from it"
+  },
+  {
+   "name": "RF boots (fractured base, essences, Eldritch)",
+   "author": "pohx",
+   "url": "https://www.pohx.net/crafts/boots/",
+   "status": "current",
+   "patch_note": "updated 2026-11-11 (3.30)",
+   "summary": [
+    "Fractured boots (life regen ideal).",
+    "Sorrow, Envy or Greed essences until wanted mods.",
+    "Bench movement speed, life, resistance.",
+    "Lesser Ember until +1 max fire res, then Lesser Ichor until life regen rate."
+   ],
+   "why_not_simulated": "starts from a fractured base"
+  },
+  {
+   "name": "RF rings (fractured base, essences or Harvest chaos)",
+   "author": "pohx",
+   "url": "https://www.pohx.net/crafts/rings/",
+   "status": "current",
+   "patch_note": "updated 2026-11-11 (3.30)",
+   "summary": [
+    "Fractured Vermillion, Ruby, Two-Stone or Amethyst ring (dex, life, fire or chaos res fracture).",
+    "30+ Screaming Essence of Anger, or Harvest reforge chaos.",
+    "Bench life, resistances, damage."
+   ],
+   "why_not_simulated": "starts from a fractured base"
+  },
+  {
+   "name": "RF amulet (fractured base, essences)",
+   "author": "pohx",
+   "url": "https://www.pohx.net/crafts/amulet/",
+   "status": "current",
+   "patch_note": "updated 2026-11-11 (3.30)",
+   "summary": [
+    "Fractured amulet, item level 75+ (84 for best resistances).",
+    "20+ Screaming Essence of Anger until 20%+ DoT multi or +1 fire gems.",
+    "Anoint, bench life and resistances. The author says buying one is usually cheaper."
+   ],
+   "why_not_simulated": "starts from a fractured base"
+  },
+  {
+   "name": "RF shield (Pristine or Harvest life, swaps)",
+   "author": "pohx",
+   "url": "https://www.pohx.net/crafts/shield/",
+   "status": "current",
+   "patch_note": "updated 2026-11-11 (3.30)",
+   "summary": [
+    "Pristine Fossil or Harvest reforge life until 'recover 4%+ life on block'.",
+    "Harvest-swap resistances to fire, bench max life, exalt open affixes."
+   ],
+   "why_not_simulated": "the block-recovery mod depends on the shield base; set it up in Recipes"
+  },
+  {
+   "name": "RF starter body armour (Dense fossil or Envy)",
+   "author": "pohx",
+   "url": "https://www.pohx.net/crafts/starter-body-armor/",
+   "status": "current",
+   "patch_note": "updated 2026-11-11 (3.30)",
+   "summary": [
+    "Hybrid armour base (e.g. Saint's Hauberk).",
+    "15+ Dense Fossils in Primitive Chaotic Resonators (or Screaming Envy) until 1000+ armour.",
+    "Bench armour, fire and chaos res, 20% quality."
+   ],
+   "why_not_simulated": "the target is an armour total, not a mod list"
+  },
+  {
+   "name": "Lightning cluster jewels (Harvest)",
+   "author": "ghazzy",
+   "url": "https://www.poe-vault.com/guides/lightning-cluster-jewels",
+   "status": "older",
+   "patch_note": "poe-vault, 2022-11-28 (Kalandra 3.19)",
+   "summary": [
+    "Large Cluster Jewel, item level 68-74, 8 passives, lightning damage.",
+    "Harvest reforge life (most reliable), lightning or cold until Sadist, Doryani's Lesson, Stormrider.",
+    "Two of three: exalt for the last one."
+   ],
+   "why_not_simulated": "cluster jewels are not modelled yet"
+  }
+ ]
+}

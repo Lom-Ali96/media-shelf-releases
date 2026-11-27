@@ -153,6 +153,10 @@ def describe_step(gd: GameData, s: Step) -> str:
     if s.until is not None:
         wanted = ", ".join(r.mod_type for r in s.until.all_of)
         text += f", repeat until {wanted}" if wanted else ", repeat"
+    if s.check is not None:
+        need = ", ".join(r.mod_type for r in s.check.all_of)
+        back = f"go back to step {int(s.on_fail[5:]) + 1}" if s.on_fail.startswith("goto:") else "start over"
+        text += f"; if {need} is missing: {back}"
     return text
 
 

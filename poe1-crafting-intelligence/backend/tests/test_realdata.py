@@ -105,3 +105,19 @@ def test_lock_meta_crafts_cost_what_the_3_30_patch_notes_say(real_gd):
     assert cost["StrMasterItemGenerationCannotChangePrefixes"] == {"Divine Orb": 4, "Sacred Orb": 1}
     assert cost["DexMasterItemGenerationCannotChangeSuffixesB"] == {"Divine Orb": 4, "Blessed Orb": 4}
     assert cost["StrMasterItemGenerationCannotChangePrefixesC"] == {"Divine Orb": 4, "Exalted Orb": 8}
+
+
+def test_every_guide_recipe_fits_the_game_data(real_gd):
+    import json
+    from pathlib import Path
+
+    from poeci.engine.recipe import recipe_from_json
+    from poeci.engine.simulate import ModRequirement
+
+    guides = json.loads((Path(__file__).parents[1] / "poeci" / "knowledge" / "guides.json").read_text(encoding="utf-8"))
+    assert len(guides["index"]) >= 50
+    for r in guides["recipes"]:
+        b = real_gd.bases_by_name[r["base"]]
+        pool = {e.mod.type for e in eligible_pool(real_gd, ItemState(b.id, r["item_level"], "rare", influences=frozenset(r["influences"])))}
+        assert all(w["mod_type"] in pool for w in r["wants"]), r["name"]
+        recipe_from_json(r["name"], r["steps"], [ModRequirement(w["mod_type"], w["max_tier"]) for w in r["wants"]])

@@ -371,6 +371,15 @@ def beast_prefix_for_suffix(gd, item, rng, **_):
     return _beast_swap(gd, item, rng, "suffix", "prefix")
 
 
+def beast_metamod(gd, item, rng, *, mod_id: str, **_):
+    """Wild Bristle Matron: add a crafted meta-modifier of your choice to a non-unique item.
+    pohx's 3.30 RF helmet guide (pohx.net/crafts/elder-rf-helmet, Nov 2026) uses it to add
+    'Suffixes Cannot Be Changed'; it is placed like the bench craft (slot, crafted-mod limit)."""
+    _require(mod_id in gd.mods and gd.mods[mod_id].type.startswith("ItemGeneration")
+             and not gd.mods[mod_id].type.endswith("Count"), "choose a meta-modifier (lock, multimod, cannot roll ...)")
+    return bench_craft(gd, item, rng, mod_id=mod_id)
+
+
 # ------------------------------------------------------------ influence (EXPERIMENTAL)
 INFLUENCES = ("shaper", "elder", "crusader", "hunter", "redeemer", "warlord")
 
@@ -496,6 +505,7 @@ ACTIONS: dict[str, ActionInfo] = {
         ActionInfo("eldritch_annulment", "Eldritch Orb of Annulment", eldritch_annulment, "Eldritch Orb of Annulment", status="experimental"),
         ActionInfo("beast_suffix_for_prefix", "Beastcraft (Farric Lynx Alpha): add a suffix, remove a random prefix", beast_suffix_for_prefix, "Farric Lynx Alpha", status="experimental"),
         ActionInfo("beast_prefix_for_suffix", "Beastcraft (Farric Wolf Alpha): add a prefix, remove a random suffix", beast_prefix_for_suffix, "Farric Wolf Alpha", status="experimental"),
+        ActionInfo("beast_metamod", "Beastcraft (Wild Bristle Matron): add a meta-modifier", beast_metamod, "Wild Bristle Matron", status="experimental"),
     ]
 }
 

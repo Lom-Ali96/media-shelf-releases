@@ -28,6 +28,7 @@ from ..updates import versions
 
 WEB = Path(__file__).parents[1] / "web" / "index.html"
 IDEAS = Path(__file__).parents[1] / "knowledge" / "craft_ideas.json"
+GUIDES = Path(__file__).parents[1] / "knowledge" / "guides.json"
 
 
 class SettingsIn(BaseModel):
@@ -83,6 +84,8 @@ class RecipeStepIn(BaseModel):
     params: dict = Field(default_factory=dict)
     repeat: str = "once"  # once | until_wanted | until_mods
     mods: list[str] = Field(default_factory=list)
+    check: list[str] = Field(default_factory=list)  # mods that must be present after the step
+    on_fail: str = "restart"  # restart | goto:<step number from 1>
 
 class RecipeIn(BaseModel):
     name: str = Field("My recipe", max_length=200)
@@ -358,6 +361,11 @@ def create_app(game_data: GameData | None = None, conn=None) -> FastAPI:
         if b is None:
             raise HTTPException(404, f"unknown base {name!r}")
         return b
+
+    @app.get("/api/guides")
+    def guides():
+        """Guide library: Craft of Exile's guide index (links) and our recipes/notes from the written guides."""
+        return json.loads(GUIDES.read_text(encoding="utf-8"))
 
     @app.post("/api/recipes/suggest")
     def recipe_suggest(body: SuggestIn):
@@ -678,6 +686,8 @@ def _valid_actions(g: GameData, item: ItemState) -> list[dict]:
         "eldritch_currency": [{"side": s, "tier": t} for s in ("exarch", "eater") for t in (1, 4)],
         "bench_craft": [{"mod_id": (o.get("actions") or {}).get("add_explicit_mod")} for o in g.bench_options
                         if (o.get("actions") or {}).get("add_explicit_mod") in g.mods],
+        "beast_metamod": [{"mod_id": m.id} for m in g.mods.values()
+                          if m.domain == "crafted" and m.type.startswith("ItemGeneration") and not m.type.endswith("Count")],
     }
     out = []
     for a in ACTIONS.values():

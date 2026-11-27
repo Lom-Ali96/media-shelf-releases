@@ -173,7 +173,9 @@ def validate(recipe: Recipe) -> None:
 
 def recipe_from_json(name: str, steps: list[dict], wants: list[ModRequirement]) -> Recipe:
     """Steps as stored/edited in the UI: {action, params, repeat: once|until_wanted|until_mods,
-    mods: [mod types for until_mods]}. The target is every wanted mod."""
+    mods: [mod types for until_mods], check: [mod types that must be present afterwards],
+    on_fail: 'restart' or 'goto:N' (N = step number, starting at 1, as shown in the UI)}.
+    The target is every wanted mod."""
     by_type = {w.mod_type: w for w in wants}
     out = []
     for n, s in enumerate(steps):
@@ -189,7 +191,18 @@ def recipe_from_json(name: str, steps: list[dict], wants: list[ModRequirement]) 
             until = None
         else:
             raise InvalidAction(f"step {n + 1}: unknown repeat {repeat!r}")
-        out.append(Step(s["action"], dict(s.get("params") or {}), until=until))
+        check, on_fail = None, "restart"
+        if s.get("check"):
+            unknown = [m for m in s["check"] if m not in by_type]
+            if unknown:
+                raise InvalidAction(f"step {n + 1}: the check needs wanted mod types, got {unknown}")
+            check = Condition(all_of=tuple(by_type[m] for m in s["check"]))
+            target = str(s.get("on_fail") or "restart")
+            if target.startswith("goto:") and target[5:].isdigit():
+                on_fail = f"goto:{int(target[5:]) - 1}"  # UI numbers steps from 1
+            elif target != "restart":
+                raise InvalidAction(f"step {n + 1}: on_fail must be 'restart' or 'goto:<step number>'")
+        out.append(Step(s["action"], dict(s.get("params") or {}), until=until, check=check, on_fail=on_fail))
     recipe = Recipe(name, tuple(out), Condition(all_of=tuple(wants)))
     validate(recipe)
     return recipe

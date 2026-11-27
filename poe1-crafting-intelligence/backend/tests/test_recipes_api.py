@@ -72,3 +72,27 @@ def test_collected_ideas_price_groups(gd, conn):
     c.delete(f"/api/ideas/collected/{idea['id']}")
     assert c.get("/api/ideas/collected").json()["groups"]["under_10_div"] == []
     assert c.post("/api/ideas/collect", json={"text": "hello"}).status_code == 422
+
+
+def test_check_and_goto_in_recipe_json_and_matron(gd):
+    import random
+
+    from poeci.engine.actions import apply
+    from poeci.engine.item import ItemState, ModInstance
+    from poeci.engine.recipe import run_once
+
+    from .conftest import RING
+
+    wants = [ModRequirement("FireResistance", 2)]
+    rec = recipe_from_json("x", [{"action": "alchemy"},
+                                 {"action": "chaos", "check": ["FireResistance"], "on_fail": "goto:2"}], wants)
+    assert rec.steps[1].on_fail == "goto:1"  # UI step 2 -> index 1
+    ok, used = run_once(gd, rec, ItemState(RING, 84), random.Random(1))
+    assert ok and used["Chaos Orb"] >= 1
+    with pytest.raises(InvalidAction):
+        recipe_from_json("x", [{"action": "chaos", "check": ["Nope"]}], wants)
+    locked = apply(gd, ItemState(RING, 84, "rare", (ModInstance("Life3"),)), "beast_metamod", random.Random(1),
+                   mod_id="XMasterItemGenerationCannotChangePrefixes")
+    assert locked.explicits[-1].crafted
+    with pytest.raises(InvalidAction, match="meta-modifier"):
+        apply(gd, ItemState(RING, 84, "rare"), "beast_metamod", random.Random(1), mod_id="CraftedCold")
