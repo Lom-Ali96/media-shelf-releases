@@ -25,6 +25,7 @@ Collected 2026-11-26. For each source: what it gives, how it can be used, and ho
 |---|---|---|
 | [Craft of Exile](https://www.craftofexile.com) data file `json/data/main/poec_data.json` | Every base, mod tier and weight, the **six influence pools**, veiled, essence, Delve and Incursion mods, **Eldritch implicits** (≈670 entries with tiers and weights), Maven data | ✅ `scripts/compare_craftofexile.py`: 62 of 64 pool cases identical (10 bases, 9 × 6 influences); the 2 differences are a Craft of Exile quirk with the wand generation weight |
 | Craft of Exile [FAQ](https://www.craftofexile.com/faq), [basics](https://www.craftofexile.com/basics), [metamods](https://www.craftofexile.com/metamods) | The assumptions behind its simulator | ✅ read: Annulment = equal chance per removable mod; Harvest "same types" ×90 (second-hand, 2020); "more common" ×10 is an extrapolation; Sanctified Fossil formula from a 1000-item test |
+| Craft of Exile guide index `json/data/poec_guides.json` | 52 guides (37 videos, 15 written; leagues 3.14–3.22) with author, link, tags | ✅ `knowledge/guides.json`: index with links; the 15 written guides (pohx.net, poe-vault.com) read and turned into 10 recipes + 7 summaries |
 | [poedb.tw](https://poedb.tw/us/) | Game-data pages: Harvest (73 crafts), Bestiary recipes (78), Fracturing Orb, Recombinator, league pages | ✅ Harvest costs, beast list, Fracturing rules. Some tables have no patch label |
 
 ## 4. Measured community data

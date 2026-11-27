@@ -665,7 +665,7 @@ NOT_MODELLED = [
     ("Veiled Chaos/Exalted Orb, unveiling", "veiled mod pools and unveil choices not built yet"),
     ("Recombinators", "community odds disagree (docs/RESOURCES.md)"),
     ("Partial locks ('1/2 ... cannot be changed')", "which mod is protected is not documented"),
-    ("Beastcrafts: meta-modifier beast, imprint", "outcome rules not built yet"),
+    ("Beastcrafts: imprint (Craicic Croaker), influence beasts", "outcome rules not built yet"),
     ("Gwennen coin-flip crafting (3.30 league)", "option list not published"),
 ]
 

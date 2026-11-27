@@ -119,5 +119,8 @@ def test_every_guide_recipe_fits_the_game_data(real_gd):
     for r in guides["recipes"]:
         b = real_gd.bases_by_name[r["base"]]
         pool = {e.mod.type for e in eligible_pool(real_gd, ItemState(b.id, r["item_level"], "rare", influences=frozenset(r["influences"])))}
-        assert all(w["mod_type"] in pool for w in r["wants"]), r["name"]
+        # wanted mods must roll on the base, or come from an essence the recipe uses
+        essence_types = {real_gd.mods[real_gd.essences_by_name[s["params"]["essence_name"]][1]["mods"][b.item_class]].type
+                         for s in r["steps"] if s["action"] == "essence"}
+        assert all(w["mod_type"] in pool | essence_types for w in r["wants"]), r["name"]
         recipe_from_json(r["name"], r["steps"], [ModRequirement(w["mod_type"], w["max_tier"]) for w in r["wants"]])

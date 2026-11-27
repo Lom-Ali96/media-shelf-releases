@@ -1089,6 +1089,11 @@
      "bench": false
     },
     {
+     "mod_type": "SocketedGemsDealMoreElementalDamage",
+     "max_tier": 99,
+     "bench": false
+    },
+    {
      "mod_type": "IncreasedLife",
      "max_tier": 4,
      "bench": false

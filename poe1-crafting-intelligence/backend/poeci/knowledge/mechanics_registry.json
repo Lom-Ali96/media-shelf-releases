@@ -222,8 +222,8 @@
       "name": "Bestiary / beastcrafting",
       "category": "bestiary",
       "status": "experimental",
-      "notes": "IMPLEMENTED (experimental, 2026-11-26): Farric Lynx Alpha (add a suffix, remove a random prefix) and Farric Wolf Alpha (the reverse), rare items only; beast prices from poe.ninja (Beast category). Not yet: metamod beast, imprints, influence beasts. 3.30: yellow beasts no longer needed or captured; flask-mod recipes need a red beast (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). Equipment recipes (poedb.tw/us/Bestiary_Recipe (78 recipes, read 2026-11-26; page states no patch version)): add suffix + remove random prefix (Farric Lynx Alpha) and the reverse (Farric Wolf Alpha), rare only; add a crafted meta-modifier to a non-unique item (Wild Bristle Matron); imprint of a magic item (Craicic Croaker); add a mod to Shaper/Elder/conqueror items; max links/sockets; aspects; flask suffixes. Version of the recipe list unconfirmed.",
-      "engine_action": "beast_suffix_for_prefix, beast_prefix_for_suffix"
+      "notes": "IMPLEMENTED (experimental, 2026-11-26): Farric Lynx Alpha (add a suffix, remove a random prefix) and Farric Wolf Alpha (the reverse), rare items only; beast prices from poe.ninja (Beast category). Also Wild Bristle Matron (beast_metamod: add a chosen meta-modifier, per pohx's 3.30 helmet guide). Not yet: imprints, influence beasts. 3.30: yellow beasts no longer needed or captured; flask-mod recipes need a red beast (patch notes 3.30.0 (patchbot.io mirror of the official notes, read 2026-11-26)). Equipment recipes (poedb.tw/us/Bestiary_Recipe (78 recipes, read 2026-11-26; page states no patch version)): add suffix + remove random prefix (Farric Lynx Alpha) and the reverse (Farric Wolf Alpha), rare only; add a crafted meta-modifier to a non-unique item (Wild Bristle Matron); imprint of a magic item (Craicic Croaker); add a mod to Shaper/Elder/conqueror items; max links/sockets; aspects; flask suffixes. Version of the recipe list unconfirmed.",
+      "engine_action": "beast_suffix_for_prefix, beast_prefix_for_suffix, beast_metamod"
     },
     {
       "id": "fracturing",

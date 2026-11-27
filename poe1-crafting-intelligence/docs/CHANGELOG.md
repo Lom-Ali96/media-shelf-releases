@@ -36,7 +36,11 @@
 - Eldritch: Embers/Ichors (tiers 1–4), dominance by tier, Eldritch Exalted Orb and Eldritch Annulment on the dominant side; items carry their Exarch/Eater implicit and the parser recognises them on pasted items (experimental).
 - Item Analyzer lists every action: usable now, usable once you pick an option (tested with every essence, fossil, tag, influence, Eldritch tier, bench craft), not possible (with reason), and mechanics that exist in 3.30 but are not modelled yet. Shows Eldritch implicits and the dominant side.
 - Simulator and recipe editor: inputs for influence and Eldritch side/tier.
-- 75 automated tests.
+- Guide library (`knowledge/guides.json`, `GET /api/guides`): Craft of Exile's guide index (52 entries: links, authors, league/patch, tags) plus 10 recipes and 7 summaries paraphrased from the written guides, marked current (3.30) or older. Loaded recipes keep their source link and notes.
+- Recipe steps can check mods afterwards and jump back ("if missing: go back to step N"); used by pohx's Elder RF helmet loop (Matron lock + Harvest reforge life).
+- Wild Bristle Matron beastcraft (add a chosen meta-modifier), sourced from pohx's 3.30 guide.
+- Mod Pool redesigned (ideas from Craft of Exile's calculator, own look): influence buttons, include/exclude tag filters, prefix and suffix columns with totals, groups that expand into tiers, numbered wanted mods with Plan routes / Use in Recipes. Plain buttons follow the dark theme.
+- 77 automated tests.
 
 ## 0.1.0 (2026-11-26): Milestone 1
 
